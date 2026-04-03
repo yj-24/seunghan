@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>럭키드로우 프리미엄</title>
+    <title>XngHan&Xoul Glow Draw</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
@@ -11,7 +11,8 @@
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+            /* 배경 이미지: 기존 스타일 유지 */
+            background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), 
                         url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
@@ -20,64 +21,87 @@
         }
         .glass-panel {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 2rem;
+            border-radius: 2.5rem;
         }
-        .result-card { background: white; color: black; animation: slideIn 0.3s ease-out forwards; }
-        .summary-badge { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); }
-        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .result-card { 
+            background: white; 
+            color: black; 
+            animation: slideIn 0.3s ease-out forwards; 
+        }
+        .summary-badge { 
+            background: rgba(255, 255, 255, 0.15); 
+            border: 1px solid rgba(255, 255, 255, 0.2); 
+            backdrop-filter: blur(5px);
+        }
+        @keyframes slideIn { 
+            from { transform: translateY(12px); opacity: 0; } 
+            to { transform: translateY(0); opacity: 1; } 
+        }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* 타이틀 강조 효과 */
+        .glow-text {
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
     </style>
 </head>
-<body class="py-8 px-5">
+<body class="py-10 px-6">
 
     <div class="max-w-md mx-auto relative">
-        <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-black tracking-tighter italic text-white leading-none">LUCKY<br>PICK</h1>
-            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-10 h-10 rounded-full bg-white/10 text-white/20 font-bold text-[10px] hover:bg-white/20 hover:text-white/40 transition-colors">AD</button>
+        <!-- 수정된 타이틀 영역 -->
+        <div class="flex justify-between items-start mb-10">
+            <div class="flex flex-col">
+                <h1 class="text-3xl font-black tracking-tighter leading-none glow-text">
+                    XngHan&Xoul<br>
+                    <span class="text-4xl text-blue-400 italic">Glow</span>
+                </h1>
+            </div>
+            <!-- 반투명 관리자 버튼 -->
+            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/5 text-white/10 font-bold text-[10px] hover:bg-white/10 hover:text-white/30 transition-all">AD</button>
         </div>
 
-        <!-- 메인 드로우 영역 -->
-        <div class="glass-panel p-8 shadow-2xl mb-6 text-center border-t border-white/20">
+        <!-- 메인 드로우 카드 -->
+        <div class="glass-panel p-8 shadow-2xl mb-8 text-center border-t border-white/20">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
-                <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg">행운을 확인하세요</div>
+                <div id="intro-text" class="my-auto text-zinc-500 font-medium text-lg italic">Touch to Glow!</div>
                 
-                <!-- [NEW] 당첨 요약 영역 -->
-                <div id="summary-area" class="w-full mb-4 flex flex-wrap justify-center gap-2 hidden">
-                    <!-- 요약 배지들이 여기에 생성됨 -->
-                </div>
+                <!-- 당첨 결과 요약 (여러 개 뽑을 때) -->
+                <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
                 
                 <!-- 개별 결과 리스트 -->
-                <div id="results-wrapper" class="w-full space-y-2"></div>
+                <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
             
-            <div class="flex gap-3 justify-center mb-6">
-                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-12 h-12 rounded-2xl border border-white/20 font-bold bg-white text-black transition-all">1</button>
-                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-12 h-12 rounded-2xl border border-white/20 font-bold hover:bg-white/10 transition-all">5</button>
-                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-2xl border border-white/20 font-bold hover:bg-white/10 transition-all">10</button>
+            <!-- 수량 선택 버튼 -->
+            <div class="flex gap-4 justify-center mb-8">
+                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white text-black transition-all shadow-lg">1</button>
+                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">5</button>
+                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">10</button>
             </div>
 
-            <button id="draw-button" onclick="executeDraw()" class="w-full py-5 bg-white text-black rounded-2xl text-2xl font-black shadow-[0_0_20px_rgba(255,255,255,0.3)] active:scale-95 transition-all disabled:opacity-30">
+            <!-- 메인 실행 버튼 -->
+            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-white text-black rounded-3xl text-2xl font-black shadow-[0_10px_30px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-20">
                 <span id="draw-btn-label">1개 뽑기</span>
             </button>
         </div>
 
-        <!-- 상품 현황판 -->
-        <div class="glass-panel p-6 shadow-xl border-t border-white/10">
-            <h2 class="text-xs font-bold mb-5 opacity-50 tracking-widest uppercase italic">Current Status</h2>
-            <div id="prizes-status" class="space-y-4"></div>
+        <!-- 하단 상품 현황판 -->
+        <div class="glass-panel p-7 shadow-xl border-t border-white/10">
+            <h2 class="text-[10px] font-bold mb-6 opacity-40 tracking-[0.2em] uppercase italic">Prize Inventory</h2>
+            <div id="prizes-status" class="space-y-5"></div>
         </div>
 
-        <!-- 관리자 패널 -->
-        <div id="admin-panel" class="hidden fixed inset-x-5 top-20 z-50 glass-panel bg-zinc-900/95 p-8 shadow-2xl border border-white/20">
+        <!-- 관리자 상세 탭 -->
+        <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 glass-panel bg-zinc-950/95 p-8 shadow-2xl border border-white/10">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <h2 class="font-black text-xl text-white underline decoration-blue-500 italic text-left">ADMIN DATA</h2>
-                <button onclick="toggleAdminTab()" class="text-zinc-500 font-bold">CLOSE</button>
+                <h2 class="font-black text-xl text-blue-400 italic">ADMIN DATA</h2>
+                <button onclick="toggleAdminTab()" class="text-zinc-600 font-bold text-sm">CLOSE</button>
             </div>
-            <div id="admin-details" class="space-y-3 font-mono text-xs text-zinc-400 mb-8 text-left"></div>
-            <button onclick="fullReset()" class="w-full py-4 bg-red-600/20 text-red-500 border border-red-600/30 rounded-xl text-xs font-bold uppercase tracking-widest">System Reset</button>
+            <div id="admin-details" class="space-y-3 font-mono text-xs text-zinc-500 mb-8 text-left"></div>
+            <button onclick="fullReset()" class="w-full py-4 bg-red-900/20 text-red-500 border border-red-900/30 rounded-2xl text-[10px] font-bold uppercase tracking-widest">System Factory Reset</button>
         </div>
     </div>
 
@@ -96,7 +120,7 @@
         let drawQty = 1;
 
         function init() {
-            const saved = localStorage.getItem('lucky_v5');
+            const saved = localStorage.getItem('lucky_v6');
             if (saved) {
                 state = JSON.parse(saved);
             } else {
@@ -106,11 +130,11 @@
             render();
         }
 
-        function save() { localStorage.setItem('lucky_v5', JSON.stringify(state)); }
+        function save() { localStorage.setItem('lucky_v6', JSON.stringify(state)); }
 
         function fullReset() {
-            if(confirm("모든 데이터를 초기화하시겠습니까?")) {
-                localStorage.removeItem('lucky_v5');
+            if(confirm("주의: 모든 데이터를 초기 상태로 되돌리시겠습니까?")) {
+                localStorage.removeItem('lucky_v6');
                 location.reload();
             }
         }
@@ -121,8 +145,13 @@
 
         function changeQty(n) {
             drawQty = n;
-            document.querySelectorAll('.qty-btn').forEach(btn => btn.classList.remove('bg-white', 'text-black'));
-            document.getElementById(`qty-${n}`).classList.add('bg-white', 'text-black');
+            document.querySelectorAll('.qty-btn').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-black');
+                btn.classList.add('bg-white/5', 'text-white');
+            });
+            const activeBtn = document.getElementById(`qty-${n}`);
+            activeBtn.classList.remove('bg-white/5', 'text-white');
+            activeBtn.classList.add('bg-white', 'text-black');
             document.getElementById('draw-btn-label').innerText = `${n}개 뽑기`;
         }
 
@@ -137,16 +166,16 @@
                 return `
                     <div class="flex justify-between items-center ${out ? 'opacity-20' : ''}">
                         <div class="flex flex-col text-left">
-                            <span class="text-[10px] text-zinc-500 font-bold uppercase leading-none mb-1">${item.id} PRIZE</span>
-                            <span class="font-bold text-lg leading-tight text-white">${item.name}</span>
+                            <span class="text-[9px] text-zinc-500 font-bold uppercase mb-1 tracking-wider">${item.id} GRADE</span>
+                            <span class="font-bold text-lg leading-none text-white">${item.name}</span>
                         </div>
-                        <span class="text-xs font-black ${item.hideCount && !out ? 'text-blue-400' : 'text-zinc-400'}">${statusText}</span>
+                        <span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-400' : 'text-zinc-500'}">${statusText}</span>
                     </div>
                 `;
             }).join('');
 
             adminContainer.innerHTML = `
-                <div class="mb-4 text-blue-400 font-bold italic">누적 참여 횟수: ${historyCount}회</div>
+                <div class="mb-4 text-blue-400 font-bold">Current Progress: ${historyCount}회 완료</div>
             ` + state.map(item => `
                 <div class="flex justify-between border-b border-white/5 pb-1">
                     <span>${item.id} - ${item.name}</span>
@@ -170,7 +199,7 @@
             summaryArea.innerHTML = "";
             wrapper.innerHTML = "";
 
-            let pickedList = []; // 이번 회차 당첨 상품들 저장
+            let pickedList = [];
 
             for (let i = 0; i < drawQty; i++) {
                 const historyCount = 1000 - state.reduce((acc, cur) => acc + cur.count, 0);
@@ -203,24 +232,22 @@
 
                 pickedList.push(picked);
 
-                // 개별 결과 카드 생성
                 const card = document.createElement('div');
-                card.className = "result-card p-4 rounded-2xl flex justify-between items-center shadow-xl mb-2";
+                card.className = "result-card p-4 rounded-[1.5rem] flex justify-between items-center shadow-xl mb-3";
                 card.innerHTML = `
                     <div class="flex flex-col text-left">
-                        <span class="text-[10px] font-bold opacity-40 uppercase leading-none mb-1">${picked.id} RANK</span>
-                        <span class="text-xl font-black leading-tight">${picked.name}</span>
+                        <span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span>
+                        <span class="text-xl font-black">${picked.name}</span>
                     </div>
-                    <div class="bg-black text-white text-[10px] px-3 py-1 rounded-full font-bold">당첨</div>
+                    <div class="bg-blue-600 text-white text-[9px] px-3 py-1 rounded-full font-bold">GET</div>
                 `;
-                wrapper.prepend(card); // 최신 당첨이 위로 오게
+                wrapper.prepend(card);
                 
                 save();
                 render();
-                await new Promise(r => setTimeout(r, 120));
+                await new Promise(r => setTimeout(r, 100));
             }
 
-            // [NEW] 당첨 요약 로직 실행
             const summary = pickedList.reduce((acc, cur) => {
                 acc[cur.name] = (acc[cur.name] || 0) + 1;
                 return acc;
@@ -229,8 +256,8 @@
             summaryArea.classList.remove('hidden');
             Object.entries(summary).forEach(([name, count]) => {
                 const badge = document.createElement('div');
-                badge.className = "summary-badge px-3 py-1 rounded-full text-xs font-bold animate-pulse";
-                badge.innerText = `${name} x${count}`;
+                badge.className = "summary-badge px-4 py-1.5 rounded-full text-[11px] font-bold border border-white/20";
+                badge.innerText = `${name} × ${count}`;
                 summaryArea.appendChild(badge);
             });
 
