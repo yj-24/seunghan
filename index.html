@@ -12,34 +12,30 @@
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            /* 배경 이미지: 첨부하신 image_1.jpg 적용 */
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
-                        url('image_1.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-color: #ffffff;
             min-height: 100vh;
-            color: white;
+            color: #000000;
         }
 
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+        .main-card {
+            background: #ffffff;
+            border: 2px solid #000000;
             border-radius: 2.5rem;
+            box-shadow: 10px 10px 0px #000000;
         }
 
         .result-card { 
-            background: rgba(255, 255, 255, 0.95); 
+            background: #f3f4f6; 
             color: black; 
+            border: 1px solid #000000;
             animation: slideIn 0.3s ease-out forwards; 
-            border-radius: 1.5rem;
+            border-radius: 1.2rem;
         }
 
         .summary-badge { 
-            background: rgba(255, 255, 255, 0.15); 
-            border: 1px solid rgba(255, 255, 255, 0.2); 
-            backdrop-filter: blur(5px);
+            background: #000000; 
+            color: #ffffff;
+            border-radius: 99px;
         }
 
         @keyframes slideIn { 
@@ -49,7 +45,22 @@
 
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .glow-text { text-shadow: 0 0 15px rgba(255, 255, 255, 0.5); }
+        
+        /* 타이틀 스타일 수정 */
+        .title-black {
+            color: #000000;
+            line-height: 1;
+        }
+
+        /* Glow 색상 변경 (#f8ff00) 및 가독성을 위한 약한 외곽선 추가 */
+        .glow-highlight {
+            color: #f8ff00;
+            text-shadow: 
+                -1px -1px 0 #000,  
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000;
+        }
     </style>
 </head>
 <body class="py-10 px-6">
@@ -58,57 +69,55 @@
         <!-- 타이틀 영역 -->
         <div class="flex justify-between items-start mb-10">
             <div class="flex flex-col text-left">
-                <h1 class="text-3xl font-black tracking-tighter leading-none glow-text">
+                <h1 class="text-3xl font-black tracking-tighter title-black">
                     XngHan&Xoul<br>
-                    <span class="text-4xl text-blue-400 italic">Glow</span>
+                    <span class="text-4xl italic glow-highlight">Glow</span>
                 </h1>
             </div>
-            <!-- 반투명 관리자 버튼 -->
-            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/10 text-white/30 font-bold text-[10px] flex items-center justify-center transition-all hover:bg-white/20">AD</button>
+            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full border border-zinc-200 text-zinc-300 font-bold text-[10px] flex items-center justify-center">AD</button>
         </div>
 
         <!-- 메인 카드 -->
-        <div class="glass-panel p-8 shadow-2xl mb-8 text-center border-t border-white/20">
+        <div class="main-card p-8 mb-8 text-center">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
-                <div id="intro-text" class="my-auto text-zinc-300 font-medium text-lg italic">Touch to Glow!</div>
+                <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg italic">Touch to Start</div>
                 
                 <!-- 당첨 요약 -->
                 <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
                 
-                <!-- 개별 결과 리스트 -->
+                <!-- 결과 리스트 -->
                 <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
             
             <div class="flex gap-4 justify-center mb-8">
-                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white text-black">1</button>
-                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white">5</button>
-                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white">10</button>
+                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border-2 border-black font-bold bg-black text-white transition-all">1</button>
+                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border-2 border-black font-bold bg-white text-black transition-all">5</button>
+                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-14 h-14 rounded-2xl border-2 border-black font-bold bg-white text-black transition-all">10</button>
             </div>
 
-            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-white text-black rounded-3xl text-2xl font-black shadow-xl active:scale-95 transition-all">
+            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all">
                 <span id="draw-btn-label">1개 뽑기</span>
             </button>
         </div>
 
-        <!-- 하단 현황 (F, G 수량 숨김) -->
-        <div class="glass-panel p-7 shadow-xl border-t border-white/10">
+        <!-- 하단 현황 -->
+        <div class="main-card p-7 border-2 border-black">
             <h2 class="text-[10px] font-bold mb-6 opacity-40 tracking-[0.2em] uppercase italic text-left">Prize Inventory</h2>
             <div id="prizes-status" class="space-y-5"></div>
         </div>
 
-        <!-- 관리자 상세 패널 -->
-        <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 glass-panel bg-zinc-950/95 p-8 shadow-2xl border border-white/10">
-            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <h2 class="font-black text-xl text-blue-400 italic">ADMIN DATA</h2>
-                <button onclick="toggleAdminTab()" class="text-zinc-600 font-bold text-sm">CLOSE</button>
+        <!-- 관리자 패널 -->
+        <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 bg-white border-4 border-black p-8 shadow-[20px_20px_0px_#000000] rounded-3xl">
+            <div class="flex justify-between items-center mb-6 border-b-2 border-black pb-4">
+                <h2 class="font-black text-xl italic">ADMIN DATA</h2>
+                <button onclick="toggleAdminTab()" class="text-zinc-400 font-bold text-sm">CLOSE</button>
             </div>
-            <div id="admin-details" class="space-y-3 font-mono text-xs text-zinc-500 mb-8 text-left"></div>
-            <button onclick="fullReset()" class="w-full py-4 bg-red-900/20 text-red-500 border border-red-900/30 rounded-2xl text-[10px] font-bold uppercase tracking-widest">System Factory Reset</button>
+            <div id="admin-details" class="space-y-3 font-mono text-xs text-black mb-8 text-left"></div>
+            <button onclick="fullReset()" class="w-full py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl text-[10px] font-bold uppercase tracking-widest">System Factory Reset</button>
         </div>
     </div>
 
     <script>
-        // 상품 설정 및 구간별 배출 제한 (1000개 기준)
         const PRIZE_CONFIG = [
             { id: 'A', name: '바지', count: 1, hideCount: false, limitPerQuart: [0, 0, 1, 1] }, 
             { id: 'B', name: '반다나', count: 9, hideCount: false, limitPerQuart: [2, 5, 7, 9] }, 
@@ -123,7 +132,7 @@
         let drawQty = 1;
 
         function init() {
-            const saved = localStorage.getItem('lucky_glow_v1');
+            const saved = localStorage.getItem('lucky_white_glow_v1');
             if (saved) {
                 state = JSON.parse(saved);
             } else {
@@ -133,11 +142,11 @@
             render();
         }
 
-        function save() { localStorage.setItem('lucky_glow_v1', JSON.stringify(state)); }
+        function save() { localStorage.setItem('lucky_white_glow_v1', JSON.stringify(state)); }
 
         function fullReset() {
             if(confirm("모든 데이터를 초기화하시겠습니까?")) {
-                localStorage.removeItem('lucky_glow_v1');
+                localStorage.removeItem('lucky_white_glow_v1');
                 location.reload();
             }
         }
@@ -149,12 +158,12 @@
         function changeQty(n) {
             drawQty = n;
             document.querySelectorAll('.qty-btn').forEach(btn => {
-                btn.classList.remove('bg-white', 'text-black');
-                btn.classList.add('bg-white/5', 'text-white');
+                btn.classList.remove('bg-black', 'text-white');
+                btn.classList.add('bg-white', 'text-black');
             });
             const activeBtn = document.getElementById(`qty-${n}`);
-            activeBtn.classList.remove('bg-white/5', 'text-white');
-            activeBtn.classList.add('bg-white', 'text-black');
+            activeBtn.classList.remove('bg-white', 'text-black');
+            activeBtn.classList.add('bg-black', 'text-white');
             document.getElementById('draw-btn-label').innerText = `${n}개 뽑기`;
         }
 
@@ -169,20 +178,20 @@
                 return `
                     <div class="flex justify-between items-center ${out ? 'opacity-20' : ''}">
                         <div class="flex flex-col text-left">
-                            <span class="text-[9px] text-zinc-500 font-bold uppercase mb-1 tracking-wider">${item.id} GRADE</span>
-                            <span class="font-bold text-lg leading-none text-white">${item.name}</span>
+                            <span class="text-[9px] text-zinc-400 font-bold uppercase mb-1 tracking-wider">${item.id} GRADE</span>
+                            <span class="font-bold text-lg leading-none text-black">${item.name}</span>
                         </div>
-                        <span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-400' : 'text-zinc-500'}">${statusText}</span>
+                        <span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-500' : 'text-zinc-400'}">${statusText}</span>
                     </div>
                 `;
             }).join('');
 
             adminContainer.innerHTML = `
-                <div class="mb-4 text-blue-400 font-bold italic">누적 참여: ${historyCount}회</div>
+                <div class="mb-4 text-black font-bold border-b border-zinc-100 pb-2">Total Progress: ${historyCount}회</div>
             ` + state.map(item => `
-                <div class="flex justify-between border-b border-white/5 pb-1">
+                <div class="flex justify-between border-b border-zinc-50 pb-1">
                     <span>${item.id} - ${item.name}</span>
-                    <span>${item.count} EA</span>
+                    <span>${item.count} / ${PRIZE_CONFIG.find(p => p.id === item.id).count}</span>
                 </div>
             `).join('');
         }
@@ -235,13 +244,13 @@
                 pickedList.push(picked);
 
                 const card = document.createElement('div');
-                card.className = "result-card p-4 rounded-2xl flex justify-between items-center shadow-xl mb-2";
+                card.className = "result-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-2 text-left";
                 card.innerHTML = `
-                    <div class="flex flex-col text-left">
-                        <span class="text-[9px] font-bold opacity-40 uppercase mb-1">${picked.id} RANK</span>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span>
                         <span class="text-xl font-black">${picked.name}</span>
                     </div>
-                    <div class="bg-blue-600 text-white text-[9px] px-3 py-1 rounded-full font-bold">당첨</div>
+                    <div class="bg-black text-white text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-tighter">Win</div>
                 `;
                 wrapper.prepend(card);
                 save();
@@ -257,7 +266,7 @@
             summaryArea.classList.remove('hidden');
             Object.entries(summary).forEach(([name, count]) => {
                 const badge = document.createElement('div');
-                badge.className = "summary-badge px-4 py-1.5 rounded-full text-[11px] font-bold border border-white/20";
+                badge.className = "summary-badge px-4 py-1.5 text-[11px] font-bold";
                 badge.innerText = `${name} × ${count}`;
                 summaryArea.appendChild(badge);
             });
