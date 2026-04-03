@@ -7,94 +7,99 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
+        
         body { 
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            /* 배경 이미지: 기존 스타일 유지 */
-            background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), 
-                        url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');
+            /* 배경 이미지 설정: image_1.png 파일이 index.html과 같은 폴더에 있어야 합니다 */
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                        url('image_1.png');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
             min-height: 100vh;
             color: white;
         }
+
         .glass-panel {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 2.5rem;
         }
+
         .result-card { 
-            background: white; 
+            background: rgba(255, 255, 255, 0.95); 
             color: black; 
             animation: slideIn 0.3s ease-out forwards; 
+            border-radius: 1.5rem;
         }
+
         .summary-badge { 
             background: rgba(255, 255, 255, 0.15); 
             border: 1px solid rgba(255, 255, 255, 0.2); 
             backdrop-filter: blur(5px);
         }
+
         @keyframes slideIn { 
             from { transform: translateY(12px); opacity: 0; } 
             to { transform: translateY(0); opacity: 1; } 
         }
+
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* 타이틀 강조 효과 */
         .glow-text {
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
         }
     </style>
 </head>
 <body class="py-10 px-6">
 
     <div class="max-w-md mx-auto relative">
-        <!-- 수정된 타이틀 영역 -->
+        <!-- 상단 타이틀 및 관리자 버튼 -->
         <div class="flex justify-between items-start mb-10">
-            <div class="flex flex-col">
+            <div class="flex flex-col text-left">
                 <h1 class="text-3xl font-black tracking-tighter leading-none glow-text">
                     XngHan&Xoul<br>
                     <span class="text-4xl text-blue-400 italic">Glow</span>
                 </h1>
             </div>
-            <!-- 반투명 관리자 버튼 -->
-            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/5 text-white/10 font-bold text-[10px] hover:bg-white/10 hover:text-white/30 transition-all">AD</button>
+            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/10 text-white/30 font-bold text-[10px] hover:bg-white/20 transition-all">AD</button>
         </div>
 
-        <!-- 메인 드로우 카드 -->
+        <!-- 메인 뽑기 카드 -->
         <div class="glass-panel p-8 shadow-2xl mb-8 text-center border-t border-white/20">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
-                <div id="intro-text" class="my-auto text-zinc-500 font-medium text-lg italic">Touch to Glow!</div>
+                <div id="intro-text" class="my-auto text-zinc-300 font-medium text-lg italic">Touch to Glow!</div>
                 
-                <!-- 당첨 결과 요약 (여러 개 뽑을 때) -->
+                <!-- 당첨 요약 배지 영역 -->
                 <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
                 
-                <!-- 개별 결과 리스트 -->
+                <!-- 개별 당첨 리스트 -->
                 <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
             
-            <!-- 수량 선택 버튼 -->
+            <!-- 수량 선택 -->
             <div class="flex gap-4 justify-center mb-8">
                 <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white text-black transition-all shadow-lg">1</button>
                 <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">5</button>
                 <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">10</button>
             </div>
 
-            <!-- 메인 실행 버튼 -->
             <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-white text-black rounded-3xl text-2xl font-black shadow-[0_10px_30px_rgba(255,255,255,0.2)] active:scale-95 transition-all disabled:opacity-20">
                 <span id="draw-btn-label">1개 뽑기</span>
             </button>
         </div>
 
-        <!-- 하단 상품 현황판 -->
+        <!-- 하단 현황판 -->
         <div class="glass-panel p-7 shadow-xl border-t border-white/10">
-            <h2 class="text-[10px] font-bold mb-6 opacity-40 tracking-[0.2em] uppercase italic">Prize Inventory</h2>
+            <h2 class="text-[10px] font-bold mb-6 opacity-40 tracking-[0.2em] uppercase italic text-left">Prize Inventory</h2>
             <div id="prizes-status" class="space-y-5"></div>
         </div>
 
-        <!-- 관리자 상세 탭 -->
+        <!-- 관리자 탭 -->
         <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 glass-panel bg-zinc-950/95 p-8 shadow-2xl border border-white/10">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                 <h2 class="font-black text-xl text-blue-400 italic">ADMIN DATA</h2>
@@ -120,7 +125,7 @@
         let drawQty = 1;
 
         function init() {
-            const saved = localStorage.getItem('lucky_v6');
+            const saved = localStorage.getItem('lucky_final_v1');
             if (saved) {
                 state = JSON.parse(saved);
             } else {
@@ -130,11 +135,11 @@
             render();
         }
 
-        function save() { localStorage.setItem('lucky_v6', JSON.stringify(state)); }
+        function save() { localStorage.setItem('lucky_final_v1', JSON.stringify(state)); }
 
         function fullReset() {
-            if(confirm("주의: 모든 데이터를 초기 상태로 되돌리시겠습니까?")) {
-                localStorage.removeItem('lucky_v6');
+            if(confirm("데이터를 초기화하시겠습니까?")) {
+                localStorage.removeItem('lucky_final_v1');
                 location.reload();
             }
         }
@@ -175,7 +180,7 @@
             }).join('');
 
             adminContainer.innerHTML = `
-                <div class="mb-4 text-blue-400 font-bold">Current Progress: ${historyCount}회 완료</div>
+                <div class="mb-4 text-blue-400 font-bold italic">누적 참여: ${historyCount}회</div>
             ` + state.map(item => `
                 <div class="flex justify-between border-b border-white/5 pb-1">
                     <span>${item.id} - ${item.name}</span>
