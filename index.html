@@ -15,20 +15,42 @@
             background-color: #ffffff;
             min-height: 100vh;
             color: #000000;
-            padding-bottom: 200px; /* 바닥 여유 공간 */
+            /* 하단 툴바가 가려도 엽서가 보이도록 바닥 공간을 아주 크게 확보 */
+            padding-bottom: 250px; 
             overflow-x: hidden;
         }
 
-        /* 초기 박스 디자인으로 복구 (Neubrutalism Style) */
-        .glass-panel {
+        .main-card {
             background: #ffffff;
             border: 2px solid #000000;
             border-radius: 2.5rem;
             box-shadow: 10px 10px 0px #000000;
+        }
+
+        /* [핵심 수정] 하단 리스트 영역: 높이 제한 해제 및 하단 테두리 제거 */
+        .inventory-section {
+            background: #ffffff;
+            border: 2px solid #000000;
+            /* 하단 테두리를 없애 아래로 무한히 늘어나게 함 */
+            border-bottom: none; 
+            border-radius: 2.5rem 2.5rem 0 0; /* 하단 둥글기 제거 */
+            /* 오른쪽/아래 그림자 제거 (잘려 보일 수 있음) */
+            box-shadow: none; 
             width: 100%;
-            /* [중요] 높이 관련 어떤 제한도 두지 않음 */
-            height: auto !important; 
-            display: block;
+            padding: 2.5rem 1.8rem;
+            /* 높이 설정 일절 없음 (Auto) */
+            overflow: visible !important;
+            display: block !important;
+        }
+
+        /* [핵심 수정] 검은색 그림자 판을 inventory-section 아래 붙여서 짤림 느낌 없앰 */
+        .inventory-base {
+            background: #000000;
+            height: 12px; /* 그림자 두께 */
+            width: 100%;
+            border-radius: 0 0 2.5rem 2.5rem; /* 하단 둥글기 */
+            margin-top: -2px; /* section 테두리와 겹치게 */
+            margin-bottom: 50px;
         }
 
         .prize-row {
@@ -36,9 +58,10 @@
             justify-content: space-between;
             align-items: center;
             padding: 1.2rem 0;
-            border-bottom: 1px solid #f3f4f6;
+            border-bottom: 1px solid #f0f0f0; /* 구분선 */
         }
 
+        /* 마지막 항목(엽서) 구분선 제거 */
         .prize-row:last-child {
             border-bottom: none;
         }
@@ -59,11 +82,7 @@
         @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .glow-highlight {
-            color: #f8ff00;
-            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-        }
+        .glow-highlight { color: #f8ff00; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
         textarea { font-family: monospace; font-size: 10px; resize: none; border-radius: 10px; }
     </style>
 </head>
@@ -77,10 +96,10 @@
                     <span class="text-4xl italic glow-highlight">Glow</span>
                 </h1>
             </div>
-            <button onclick="toggleAdminTab()" class="w-12 h-12 rounded-full border border-zinc-200 text-zinc-400 font-bold text-[10px] flex items-center justify-center">AD</button>
+            <button onclick="toggleAdminTab()" class="w-12 h-12 rounded-full border border-zinc-200 text-zinc-300 font-bold text-[10px] flex items-center justify-center">AD</button>
         </div>
 
-        <div class="glass-panel p-8 mb-12 text-center">
+        <div class="main-card p-8 mb-12 text-center relative z-10">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2 text-black">
                 <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg italic">Touch to Start</div>
                 <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
@@ -99,16 +118,17 @@
             </button>
         </div>
 
-        <div class="glass-panel p-7">
+        <div class="inventory-section">
             <h2 class="text-[11px] font-bold mb-4 opacity-40 tracking-[0.2em] uppercase italic text-left text-black">PRIZE INVENTORY</h2>
-            <div id="prizes-status" class="flex flex-col">
+            <div id="prizes-status" class="flex flex-col prizes-container text-black">
                 </div>
         </div>
+        <div class="inventory-base"></div>
 
         <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
                 <h2 class="font-black text-2xl italic tracking-tighter">ADMIN & SYNC</h2>
-                <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm">CLOSE</button>
+                <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm text-black">CLOSE</button>
             </div>
             
             <div class="mb-10 p-6 border-2 border-dashed border-zinc-300 rounded-3xl bg-zinc-50">
@@ -155,8 +175,8 @@
         let drawQty = 1;
 
         function init() {
-            const savedState = localStorage.getItem('glow_v21_state');
-            const savedLogs = localStorage.getItem('glow_v21_logs');
+            const savedState = localStorage.getItem('glow_final_v18_state');
+            const savedLogs = localStorage.getItem('glow_final_v18_logs');
             if (savedState) { state = JSON.parse(savedState); } 
             else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
             if (savedLogs) { sessionLogs = JSON.parse(savedLogs); }
@@ -165,8 +185,8 @@
         }
 
         function save() {
-            localStorage.setItem('glow_v21_state', JSON.stringify(state));
-            localStorage.setItem('glow_v21_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_final_v18_state', JSON.stringify(state));
+            localStorage.setItem('glow_final_v18_logs', JSON.stringify(sessionLogs));
             updateSyncText();
         }
 
@@ -210,12 +230,12 @@
         }
 
         function render() {
-            const prizeContainer = document.getElementById('prizes-status');
+            const prizeContainer = document.querySelector('.prizes-container');
             prizeContainer.innerHTML = state.map(item => {
                 const out = item.count === 0;
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
                 return `
-                    <div class="prize-row ${out ? 'opacity-20' : ''} text-black">
+                    <div class="prize-row ${out ? 'opacity-20' : ''}">
                         <div class="flex flex-col text-left">
                             <span class="text-[9px] text-zinc-400 font-bold uppercase mb-1 tracking-wider">${item.id} GRADE</span>
                             <span class="font-bold text-lg leading-none">${item.name}</span>
@@ -235,12 +255,12 @@
                 const initial = PRIZE_CONFIG.find(p => p.id === item.id).count;
                 const drawn = initial - item.count;
                 const percent = ((drawn / initial) * 100).toFixed(1);
-                return `<div class="flex items-center gap-3 text-[11px] text-left text-black"><span class="w-20 font-bold truncate">${item.name}</span><div class="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full bg-black" style="width: ${percent}%"></div></div><span class="w-12 text-right opacity-50">${drawn}회</span></div>`;
+                return `<div class="flex items-center gap-3 text-[11px] text-left"><span class="w-20 font-bold truncate">${item.name}</span><div class="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full bg-black" style="width: ${percent}%"></div></div><span class="w-12 text-right opacity-50">${drawn}회</span></div>`;
             }).join('');
 
             const logList = document.getElementById('history-log-list');
             logList.innerHTML = sessionLogs.slice().reverse().map(session => `
-                <div class="history-item text-black">
+                <div class="history-item">
                     <div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold opacity-40">${session.time}</span><span class="text-[10px] font-black">${session.items.length}개</span></div>
                     <div class="flex flex-wrap">${session.items.map(i => `<span class="history-tag ${['A','B','C','D'].includes(i.grade) ? 'tag-special' : ''}">${i.name}</span>`).join('')}</div>
                 </div>
@@ -277,17 +297,20 @@
                 let rand = Math.floor(Math.random() * total);
                 let acc = 0; let picked = null;
                 for (let t of fallback) { acc += t.count; if (rand < acc) { picked = t; state.find(o => o.id === t.id).count--; break; } }
+                
                 pickedItems.push({ name: picked.name, grade: picked.id });
                 
                 const card = document.createElement('div');
-                card.className = "result-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-2 text-left text-black";
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="bg-black text-white text-[9px] px-3 py-1 rounded-full font-bold uppercase">Win</div>`;
+                card.className = "result-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-2 text-left";
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="bg-black text-white text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-widest">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 100));
             }
+
             sessionLogs.push({ time: timeStr, items: pickedItems });
             save();
+
             const summary = pickedItems.reduce((acc, cur) => { acc[cur.name] = (acc[cur.name] || 0) + 1; return acc; }, {});
             document.getElementById('summary-area').classList.remove('hidden');
             Object.entries(summary).forEach(([name, count]) => {
@@ -296,6 +319,7 @@
             });
             document.getElementById('draw-button').disabled = false;
         }
+
         init();
     </script>
 </body>
