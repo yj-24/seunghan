@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XngHan&Xoul Glow Draw</title>
+    <title>XngHan&Xoul Glow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
@@ -12,26 +12,14 @@
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            background-color: #000; /* 이미지 로딩 전 기본 검정 */
-            min-height: 100vh;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        /* 배경 레이어 분리 (이미지 경로 문제 해결을 위한 백업) */
-        .bg-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop'); /* 백업 이미지 */
+            /* 배경 이미지: 첨부하신 image_1.jpg 적용 */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('image_1.jpg');
             background-size: cover;
             background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
         }
 
         .glass-panel {
@@ -65,11 +53,9 @@
     </style>
 </head>
 <body class="py-10 px-6">
-    <!-- 배경 이미지 레이어 -->
-    <div class="bg-overlay" id="main-bg"></div>
 
-    <div class="max-w-md w-full relative">
-        <!-- 상단 타이틀 -->
+    <div class="max-w-md mx-auto relative">
+        <!-- 타이틀 영역 -->
         <div class="flex justify-between items-start mb-10">
             <div class="flex flex-col text-left">
                 <h1 class="text-3xl font-black tracking-tighter leading-none glow-text">
@@ -77,36 +63,41 @@
                     <span class="text-4xl text-blue-400 italic">Glow</span>
                 </h1>
             </div>
-            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/10 text-white/30 font-bold text-[10px] flex items-center justify-center">AD</button>
+            <!-- 반투명 관리자 버튼 -->
+            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/10 text-white/30 font-bold text-[10px] flex items-center justify-center transition-all hover:bg-white/20">AD</button>
         </div>
 
-        <!-- 메인 뽑기 카드 -->
+        <!-- 메인 카드 -->
         <div class="glass-panel p-8 shadow-2xl mb-8 text-center border-t border-white/20">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
                 <div id="intro-text" class="my-auto text-zinc-300 font-medium text-lg italic">Touch to Glow!</div>
+                
+                <!-- 당첨 요약 -->
                 <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
+                
+                <!-- 개별 결과 리스트 -->
                 <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
             
             <div class="flex gap-4 justify-center mb-8">
-                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white text-black transition-all">1</button>
-                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">5</button>
-                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">10</button>
+                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white text-black">1</button>
+                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white">5</button>
+                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white">10</button>
             </div>
 
-            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-white text-black rounded-3xl text-2xl font-black shadow-[0_10px_30px_rgba(255,255,255,0.2)] active:scale-95 transition-all">
+            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-white text-black rounded-3xl text-2xl font-black shadow-xl active:scale-95 transition-all">
                 <span id="draw-btn-label">1개 뽑기</span>
             </button>
         </div>
 
-        <!-- 하단 현황 -->
+        <!-- 하단 현황 (F, G 수량 숨김) -->
         <div class="glass-panel p-7 shadow-xl border-t border-white/10">
             <h2 class="text-[10px] font-bold mb-6 opacity-40 tracking-[0.2em] uppercase italic text-left">Prize Inventory</h2>
-            <div id="prizes-status" class="space-y-5 text-left"></div>
+            <div id="prizes-status" class="space-y-5"></div>
         </div>
 
         <!-- 관리자 상세 패널 -->
-        <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 glass-panel bg-zinc-950/95 p-8 shadow-2xl">
+        <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 glass-panel bg-zinc-950/95 p-8 shadow-2xl border border-white/10">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                 <h2 class="font-black text-xl text-blue-400 italic">ADMIN DATA</h2>
                 <button onclick="toggleAdminTab()" class="text-zinc-600 font-bold text-sm">CLOSE</button>
@@ -117,17 +108,7 @@
     </div>
 
     <script>
-        // 배경 이미지 강제 주입 로직
-        window.onload = function() {
-            const bgLayer = document.getElementById('main-bg');
-            // 만약 서버에 사진이 있다면 불러오고, 없으면 백업 이미지를 띄웁니다.
-            const img = new Image();
-            img.src = 'image_1.png';
-            img.onload = function() {
-                bgLayer.style.backgroundImage = "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('image_1.png')";
-            };
-        };
-
+        // 상품 설정 및 구간별 배출 제한 (1000개 기준)
         const PRIZE_CONFIG = [
             { id: 'A', name: '바지', count: 1, hideCount: false, limitPerQuart: [0, 0, 1, 1] }, 
             { id: 'B', name: '반다나', count: 9, hideCount: false, limitPerQuart: [2, 5, 7, 9] }, 
@@ -142,7 +123,7 @@
         let drawQty = 1;
 
         function init() {
-            const saved = localStorage.getItem('lucky_v101');
+            const saved = localStorage.getItem('lucky_glow_v1');
             if (saved) {
                 state = JSON.parse(saved);
             } else {
@@ -152,11 +133,11 @@
             render();
         }
 
-        function save() { localStorage.setItem('lucky_v101', JSON.stringify(state)); }
+        function save() { localStorage.setItem('lucky_glow_v1', JSON.stringify(state)); }
 
         function fullReset() {
             if(confirm("모든 데이터를 초기화하시겠습니까?")) {
-                localStorage.removeItem('lucky_v101');
+                localStorage.removeItem('lucky_glow_v1');
                 location.reload();
             }
         }
@@ -187,7 +168,7 @@
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
                 return `
                     <div class="flex justify-between items-center ${out ? 'opacity-20' : ''}">
-                        <div class="flex flex-col">
+                        <div class="flex flex-col text-left">
                             <span class="text-[9px] text-zinc-500 font-bold uppercase mb-1 tracking-wider">${item.id} GRADE</span>
                             <span class="font-bold text-lg leading-none text-white">${item.name}</span>
                         </div>
@@ -197,11 +178,11 @@
             }).join('');
 
             adminContainer.innerHTML = `
-                <div class="mb-4 text-blue-400 font-bold border-b border-white/10 pb-2">누적 참여: ${historyCount}회</div>
+                <div class="mb-4 text-blue-400 font-bold italic">누적 참여: ${historyCount}회</div>
             ` + state.map(item => `
                 <div class="flex justify-between border-b border-white/5 pb-1">
                     <span>${item.id} - ${item.name}</span>
-                    <span>${item.count} / ${PRIZE_CONFIG.find(p => p.id === item.id).count}</span>
+                    <span>${item.count} EA</span>
                 </div>
             `).join('');
         }
@@ -254,13 +235,13 @@
                 pickedList.push(picked);
 
                 const card = document.createElement('div');
-                card.className = "result-card p-4 rounded-[1.5rem] flex justify-between items-center shadow-xl mb-3 text-left";
+                card.className = "result-card p-4 rounded-2xl flex justify-between items-center shadow-xl mb-2";
                 card.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span>
+                    <div class="flex flex-col text-left">
+                        <span class="text-[9px] font-bold opacity-40 uppercase mb-1">${picked.id} RANK</span>
                         <span class="text-xl font-black">${picked.name}</span>
                     </div>
-                    <div class="bg-blue-600 text-white text-[9px] px-3 py-1 rounded-full font-bold">GET</div>
+                    <div class="bg-blue-600 text-white text-[9px] px-3 py-1 rounded-full font-bold">당첨</div>
                 `;
                 wrapper.prepend(card);
                 save();
