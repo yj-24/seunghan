@@ -15,12 +15,10 @@
             background-color: #ffffff;
             min-height: 100vh;
             color: #000000;
-            /* 하단 바 간섭을 완전히 피하기 위한 넉넉한 여백 */
             padding-bottom: 300px; 
             overflow-x: hidden;
         }
 
-        /* 공통 카드 디자인 */
         .main-card {
             background: #ffffff;
             border: 2px solid #000000;
@@ -28,28 +26,29 @@
             box-shadow: 10px 10px 0px #000000;
         }
 
-        /* [수정] 엽서가 잘리지 않도록 높이 관련 모든 규격(height, max-height 등) 삭제 */
-        .inventory-card {
+        /* [핵심] 높이 제한을 완전히 제거한 인벤토리 섹션 */
+        .inventory-section {
             background: #ffffff;
             border: 2px solid #000000;
             border-radius: 2.5rem;
             box-shadow: 10px 10px 0px #000000;
-            display: block; 
             width: 100%;
-            padding: 2.5rem 2rem;
+            padding: 2.5rem 1.8rem;
             margin-bottom: 50px;
+            display: block !important;
+            height: auto !important;
         }
 
-        /* 상품 리스트 개별 행 스타일 */
         .prize-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.8rem; /* 아이템 간 간격 확보 */
+            padding: 1.2rem 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .prize-row:last-child {
-            margin-bottom: 0;
+            border-bottom: none;
         }
 
         .result-card { 
@@ -75,7 +74,6 @@
 <body class="py-10 px-6">
 
     <div class="max-w-md mx-auto relative">
-        <!-- 타이틀 섹션 -->
         <div class="flex justify-between items-start mb-10">
             <div class="flex flex-col text-left">
                 <h1 class="text-3xl font-black tracking-tighter leading-none">
@@ -86,7 +84,6 @@
             <button onclick="toggleAdminTab()" class="w-12 h-12 rounded-full border border-zinc-200 text-zinc-400 font-bold text-[10px] flex items-center justify-center">AD</button>
         </div>
 
-        <!-- 메인 뽑기 카드 -->
         <div class="main-card p-8 mb-12 text-center">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
                 <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg italic">Touch to Start</div>
@@ -101,18 +98,20 @@
                 <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">10</button>
             </div>
 
-            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all">1개 뽑기</button>
+            <!-- [수정] 버튼 문구 변경: GLOW♡ -->
+            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all tracking-widest">
+                GLOW♡
+            </button>
         </div>
 
-        <!-- 상품 현황판 (엽서 노출 보장) -->
-        <div class="inventory-card">
-            <h2 class="text-[11px] font-bold mb-8 opacity-40 tracking-[0.2em] uppercase italic text-left">PRIZE INVENTORY</h2>
+        <div class="inventory-section">
+            <h2 class="text-[11px] font-bold mb-4 opacity-40 tracking-[0.2em] uppercase italic text-left">PRIZE INVENTORY</h2>
             <div id="prizes-status">
-                <!-- JS 렌더링 영역 -->
+                <!-- 리스트 자동 생성 -->
             </div>
         </div>
 
-        <!-- 관리자 및 동기화 패널 -->
+        <!-- 관리자 패널 -->
         <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
                 <h2 class="font-black text-2xl italic tracking-tighter">ADMIN & SYNC</h2>
@@ -120,30 +119,30 @@
             </div>
             
             <div class="mb-10 p-6 border-2 border-dashed border-zinc-300 rounded-3xl bg-zinc-50">
-                <h3 class="font-black text-sm mb-2">Sync Code (기기 동기화)</h3>
+                <h3 class="font-black text-sm mb-2">Sync Code</h3>
                 <textarea id="sync-data" class="w-full h-20 p-3 border border-zinc-300 mb-3" readonly></textarea>
                 <div class="grid grid-cols-2 gap-2">
-                    <button onclick="copySyncData()" class="py-2 bg-zinc-200 rounded-lg font-bold text-xs">코드 복사</button>
-                    <button onclick="importSyncData()" class="py-2 bg-black text-white rounded-lg font-bold text-xs">코드 가져오기</button>
+                    <button onclick="copySyncData()" class="py-2 bg-zinc-200 rounded-lg font-bold text-xs">Copy</button>
+                    <button onclick="importSyncData()" class="py-2 bg-black text-white rounded-lg font-bold text-xs">Import</button>
                 </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-8">
-                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50">
+                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center">
                     <p class="text-[10px] font-bold opacity-50 uppercase">Total Draws</p>
                     <p id="stat-total" class="text-3xl font-black">0</p>
                 </div>
-                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50">
+                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center">
                     <p class="text-[10px] font-bold opacity-50 uppercase">Stock Left</p>
                     <p id="stat-remain" class="text-3xl font-black">0</p>
                 </div>
             </div>
 
-            <div id="admin-prize-stats" class="space-y-2 mb-10 text-left"></div>
-            <h3 class="font-black mb-4 text-lg">History Logs</h3>
+            <div id="admin-prize-stats" class="space-y-2 mb-10"></div>
+            <h3 class="font-black mb-4 text-lg">Detailed History</h3>
             <div id="history-log-list" class="space-y-4"></div>
 
-            <button onclick="fullReset()" class="w-full mt-10 py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl font-bold uppercase text-xs">Factory Reset</button>
+            <button onclick="fullReset()" class="w-full mt-10 py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl font-bold uppercase text-xs">System Factory Reset</button>
         </div>
     </div>
 
@@ -163,8 +162,8 @@
         let drawQty = 1;
 
         function init() {
-            const savedState = localStorage.getItem('glow_v16_state');
-            const savedLogs = localStorage.getItem('glow_v16_logs');
+            const savedState = localStorage.getItem('glow_final_v18_state');
+            const savedLogs = localStorage.getItem('glow_final_v18_logs');
             if (savedState) { state = JSON.parse(savedState); } 
             else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
             if (savedLogs) { sessionLogs = JSON.parse(savedLogs); }
@@ -173,8 +172,8 @@
         }
 
         function save() {
-            localStorage.setItem('glow_v16_state', JSON.stringify(state));
-            localStorage.setItem('glow_v16_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_final_v18_state', JSON.stringify(state));
+            localStorage.setItem('glow_final_v18_logs', JSON.stringify(sessionLogs));
             updateSyncText();
         }
 
@@ -186,21 +185,21 @@
         function copySyncData() {
             document.getElementById('sync-data').select();
             document.execCommand('copy');
-            alert("코드가 복사되었습니다. PC 메모장 등에 보관하세요.");
+            alert("Copied!");
         }
 
         function importSyncData() {
-            const input = prompt("동기화 코드를 입력하세요:");
+            const input = prompt("Sync Code:");
             if (!input) return;
             try {
                 const decoded = JSON.parse(decodeURIComponent(escape(atob(input))));
                 state = decoded.state; sessionLogs = decoded.sessionLogs;
                 save(); location.reload();
-            } catch (e) { alert("잘못된 형식입니다."); }
+            } catch (e) { alert("Error!"); }
         }
 
         function fullReset() {
-            if(confirm("모든 데이터를 초기화하시겠습니까?")) { localStorage.clear(); location.reload(); }
+            if(confirm("Reset All?")) { localStorage.clear(); location.reload(); }
         }
 
         function toggleAdminTab() {
@@ -215,7 +214,6 @@
             });
             const activeBtn = document.getElementById(`qty-${n}`);
             activeBtn.classList.replace('bg-white', 'bg-black'); activeBtn.classList.replace('text-black', 'text-white');
-            document.getElementById('draw-btn-label').innerText = `${n}개 뽑기`;
         }
 
         function render() {
@@ -244,7 +242,7 @@
                 const initial = PRIZE_CONFIG.find(p => p.id === item.id).count;
                 const drawn = initial - item.count;
                 const percent = ((drawn / initial) * 100).toFixed(1);
-                return `<div class="flex items-center gap-3 text-[11px]"><span class="w-20 font-bold truncate">${item.name}</span><div class="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full bg-black" style="width: ${percent}%"></div></div><span class="w-12 text-right opacity-50">${drawn}회</span></div>`;
+                return `<div class="flex items-center gap-3 text-[11px] text-left"><span class="w-20 font-bold truncate">${item.name}</span><div class="flex-1 h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full bg-black" style="width: ${percent}%"></div></div><span class="w-12 text-right opacity-50">${drawn}회</span></div>`;
             }).join('');
 
             const logList = document.getElementById('history-log-list');
@@ -258,7 +256,7 @@
 
         async function executeDraw() {
             const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
-            if (totalRemaining < drawQty) { alert("잔여 수량이 부족합니다."); return; }
+            if (totalRemaining < drawQty) { alert("Stock Out!"); return; }
             document.getElementById('draw-button').disabled = true;
             document.getElementById('intro-text').classList.add('hidden');
             document.getElementById('summary-area').classList.add('hidden');
@@ -290,7 +288,7 @@
                 
                 const card = document.createElement('div');
                 card.className = "result-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-2 text-left";
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="bg-black text-white text-[9px] px-3 py-1 rounded-full font-bold uppercase tracking-widest">Win</div>`;
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="bg-black text-white text-[9px] px-3 py-1 rounded-full font-bold uppercase">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 100));
