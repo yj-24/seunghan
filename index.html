@@ -14,7 +14,6 @@
             background-color: #f3f4f6;
         }
         .hidden-tab { display: none; }
-        /* 당첨 애니메이션 */
         .win-effect { animation: confeti 0.5s ease-out; }
         @keyframes confeti {
             0% { transform: scale(0.5); opacity: 0; }
@@ -27,11 +26,11 @@
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-black text-gray-900">LUCKY DRAW</h1>
-            <!-- 관리자 탭 토글 버튼 -->
+            <!-- 관리자 비밀 버튼: 수량 확인/관리 -->
             <button onclick="toggleAdminTab()" class="text-xs text-gray-400 underline">수량 확인/관리</button>
         </div>
 
-        <!-- 메인 뽑기 구역 -->
+        <!-- 메인 당첨 확인창 -->
         <div id="draw-section" class="bg-white rounded-3xl shadow-2xl p-8 text-center mb-8 border-4 border-black">
             <div id="status-text" class="h-40 flex items-center justify-center text-xl font-bold text-gray-400">
                 START를 눌러주세요!
@@ -41,47 +40,46 @@
             </button>
         </div>
 
-        <!-- 일반 사용자용 상품 현황 (F, G 수량 숨김) -->
+        <!-- 사용자용 상품 현황판 -->
         <div id="guest-inventory-section" class="bg-white rounded-2xl shadow-md p-6 mb-4">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="font-bold">상품 현황</h2>
-                <div id="draw-count-display" class="text-[10px] text-gray-400 font-mono"></div>
+                <h2 class="font-bold text-lg">상품 현황</h2>
+                <div id="draw-count-display" class="text-[10px] text-gray-400 font-mono italic"></div>
             </div>
-            <div id="guest-inventory" class="space-y-3 text-base">
-                <!-- 자바스크립트로 렌더링 -->
+            <div id="guest-inventory" class="space-y-4 text-base">
+                <!-- 리스트 자동 생성 -->
             </div>
         </div>
 
-        <!-- 관리자 전용 상세 현황 탭 (기본 숨김) -->
+        <!-- 관리자 상세 제어판 (기본 숨김) -->
         <div id="admin-tab" class="hidden-tab bg-gray-800 text-white rounded-2xl shadow-xl p-6 mt-4">
             <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-                <h2 class="font-bold text-yellow-400 underline">상세 수량 (Admin Only)</h2>
+                <h2 class="font-bold text-yellow-400 underline">상세 데이터 (Admin)</h2>
                 <button onclick="toggleAdminTab()" class="text-xs bg-gray-600 px-2 py-1 rounded text-white">닫기</button>
             </div>
-            <div id="admin-inventory" class="space-y-2 text-sm font-mono">
-                <!-- 자바스크립트로 렌더링 -->
+            <div id="admin-inventory" class="space-y-2 text-sm font-mono text-gray-300">
+                <!-- 상세 수량 자동 생성 -->
             </div>
             <div class="mt-6 pt-4 border-t border-gray-700">
-                <button onclick="resetData()" class="w-full py-2 bg-red-900 text-xs rounded text-gray-300 hover:bg-red-800 transition-colors">데이터 전체 초기화 (주의)</button>
+                <button onclick="resetData()" class="w-full py-2 bg-red-900 text-xs rounded text-gray-100 font-bold hover:bg-red-800 transition-colors">전체 데이터 리셋</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 초기 상품 구성
+        // 초기 데이터 설정 (총 1,000개)
         const DEFAULT_ITEMS = [
-            { id: 'A', name: '바지', count: 1, hideCount: false },
-            { id: 'B', name: '반다나', count: 9, hideCount: false },
-            { id: 'C', name: '사인폴라로이드', count: 15, hideCount: false },
-            { id: 'D', name: '사인앨범', count: 15, hideCount: false },
-            { id: 'E', name: '손그림 로고 키링', count: 60, hideCount: false },
-            { id: 'F', name: '포토카드 (1종)', count: 300, hideCount: true },
-            { id: 'G', name: '티저 엽서', count: 600, hideCount: true }
+            { id: 'A', name: '바지', count: 1, hideCount: false, total: 1 },
+            { id: 'B', name: '반다나', count: 9, hideCount: false, total: 9 },
+            { id: 'C', name: '사인폴라로이드', count: 15, hideCount: false, total: 15 },
+            { id: 'D', name: '사인앨범', count: 15, hideCount: false, total: 15 },
+            { id: 'E', name: '손그림 로고 키링', count: 60, hideCount: false, total: 60 },
+            { id: 'F', name: '포토카드 (1종)', count: 300, hideCount: true, total: 300 },
+            { id: 'G', name: '티저 엽서', count: 600, hideCount: true, total: 600 }
         ];
 
         let items = [];
 
-        // 데이터 로드 (브라우저 저장소 확인)
         function loadData() {
             const saved = localStorage.getItem('luckyDrawData');
             if (saved) {
@@ -92,20 +90,17 @@
             }
         }
 
-        // 데이터 저장
         function saveData() {
             localStorage.setItem('luckyDrawData', JSON.stringify(items));
         }
 
-        // 초기화 함수
         function resetData() {
-            if(confirm("모든 데이터를 초기 상태(1,000개)로 리셋하시겠습니까?")) {
+            if(confirm("모든 데이터를 초기 수량(1,000개)으로 리셋하시겠습니까?")) {
                 localStorage.removeItem('luckyDrawData');
                 location.reload();
             }
         }
 
-        // 관리자 탭 토글
         function toggleAdminTab() {
             const tab = document.getElementById('admin-tab');
             tab.classList.toggle('hidden-tab');
@@ -114,58 +109,56 @@
             }
         }
 
-        // 현재까지 몇 번 참여했는지 계산
         function getDrawHistoryCount() {
             const currentTotal = items.reduce((sum, item) => sum + item.count, 0);
             return 1000 - currentTotal;
         }
 
-        // 화면 렌더링
         function render() {
             const guestContainer = document.getElementById('guest-inventory');
             const adminContainer = document.getElementById('admin-inventory');
             const historyCount = getDrawHistoryCount();
             
-            document.getElementById('draw-count-display').innerText = `누적 참여: ${historyCount}회`;
+            document.getElementById('draw-count-display').innerText = `Total Draw: ${historyCount}`;
 
             let totalLeft = 0;
 
-            // 일반용 현황판
+            // [사용자용 화면] F, G 정보 완전 은닉
             guestContainer.innerHTML = items.map(item => {
                 totalLeft += item.count;
                 const isSoldOut = item.count === 0;
-                let countLabel = item.count;
+                let countLabel = "";
 
                 if (item.hideCount) {
-                    countLabel = item.count > 0 ? "재고 있음" : "소진";
+                    countLabel = isSoldOut ? "소진 (SOLD OUT)" : "재고 있음";
+                } else {
+                    countLabel = isSoldOut ? "소진" : `${item.count}개 남음`;
                 }
 
                 return `
-                    <div class="flex justify-between items-center ${isSoldOut ? 'text-gray-300 line-through' : 'text-gray-700'}">
-                        <span class="font-bold">${item.id}. ${item.name}</span>
-                        <span class="font-bold ${item.hideCount && !isSoldOut ? 'text-blue-500' : ''}">${countLabel}</span>
+                    <div class="flex justify-between items-center ${isSoldOut ? 'text-gray-300 line-through' : 'text-gray-800'}">
+                        <span class="font-bold text-lg">${item.id}. ${item.name}</span>
+                        <span class="font-bold ${item.hideCount && !isSoldOut ? 'text-blue-500' : 'text-gray-500'} text-sm">${countLabel}</span>
                     </div>
                 `;
             }).join('');
 
-            // 관리자용 상세판
+            // [관리자용 화면] 상세 수량 추적
             adminContainer.innerHTML = items.map(item => `
                 <div class="flex justify-between border-b border-gray-700 pb-1">
                     <span>${item.id}. ${item.name}</span>
-                    <span class="${item.count < 3 ? 'text-red-400 font-bold' : ''}">${item.count}개</span>
+                    <span class="${item.count < 5 ? 'text-yellow-400' : ''}">${item.count} / ${item.total}</span>
                 </div>
             `).join('');
 
-            // 전체 소진 시 버튼 비활성화
             if(totalLeft === 0) {
                 const btn = document.getElementById('main-btn');
                 btn.disabled = true;
-                btn.innerText = "이벤트 종료";
+                btn.innerText = "이벤트가 종료되었습니다";
                 btn.classList.replace('bg-black', 'bg-gray-300');
             }
         }
 
-        // 핵심: 뽑기 로직
         function startDraw() {
             const btn = document.getElementById('main-btn');
             const status = document.getElementById('status-text');
@@ -175,7 +168,7 @@
             status.innerHTML = `<div class="animate-bounce text-black text-4xl">?</div>`;
 
             setTimeout(() => {
-                // A상 당첨 제어: 500회 미만일 경우 A상을 후보에서 제외
+                // 핵심 로직: 누적 참여 500회 미만일 때 A상(바지) 제외
                 const availablePool = items.filter(item => {
                     if (item.id === 'A' && historyCount < 500) return false;
                     return item.count > 0;
@@ -196,7 +189,6 @@
                     currentSum += item.count;
                     if (random < currentSum) {
                         selected = item;
-                        // 원본 데이터에서 수량 차감
                         const original = items.find(i => i.id === selected.id);
                         original.count--;
                         break;
@@ -215,13 +207,11 @@
             }, 800);
         }
 
-        // 초기 실행
         loadData();
         render();
 
-        // 새로고침 방지 경고
         window.onbeforeunload = function() {
-            return "페이지를 새로고침하면 당첨 결과 화면이 사라질 수 있습니다.";
+            return "창을 닫으면 당첨 화면이 사라집니다.";
         };
     </script>
 </body>
