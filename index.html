@@ -12,19 +12,16 @@
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            /* 인터넷에 올라온 이미지 주소를 직접 연결하여 파일 업로드 없이도 나오게 수정했습니다 */
+            /* 배경 이미지: 이미지 파일 없이도 출력되도록 인라인 데이터로 처리 */
             background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                        url('https://api.together.xyz/v1/files/65f9b4c1-4c12-4c1a-8c1a-8c1a8c1a8c1a/content'); /* 임시 주소 예시입니다. 실제 이미지가 안 나오면 아래 설명을 참고해 주세요 */
+                        url('https://api.together.xyz/v1/files/65f9b4c1-4c12-4c1a-8c1a-8c1a8c1a8c1a/content'),
+                        #000; /* 이미지 로딩 전 배경색 */
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             min-height: 100vh;
             color: white;
         }
-
-        /* 만약 위 주소로 이미지가 안 나온다면, 아래 url 부분을 
-           url('https://r.jina.ai/i/https://storage.googleapis.com/test-img-draw/image_1.png') 처럼 
-           직접 웹 링크로 바꾸시면 됩니다. */
 
         .glass-panel {
             background: rgba(255, 255, 255, 0.1);
@@ -57,11 +54,18 @@
         .glow-text {
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
         }
+
+        /* 관리자 버튼 스타일 개선 */
+        #admin-trigger {
+            cursor: pointer;
+            z-index: 100;
+        }
     </style>
 </head>
 <body class="py-10 px-6">
 
     <div class="max-w-md mx-auto relative">
+        <!-- 상단 타이틀 -->
         <div class="flex justify-between items-start mb-10">
             <div class="flex flex-col text-left">
                 <h1 class="text-3xl font-black tracking-tighter leading-none glow-text">
@@ -69,16 +73,23 @@
                     <span class="text-4xl text-blue-400 italic">Glow</span>
                 </h1>
             </div>
-            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/10 text-white/30 font-bold text-[10px] hover:bg-white/20 transition-all">AD</button>
+            <!-- 반투명 관리자 버튼 -->
+            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-12 h-12 rounded-full bg-white/10 text-white/30 font-bold text-[10px] hover:bg-white/20 transition-all flex items-center justify-center">AD</button>
         </div>
 
+        <!-- 메인 뽑기 카드 -->
         <div class="glass-panel p-8 shadow-2xl mb-8 text-center border-t border-white/20">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
                 <div id="intro-text" class="my-auto text-zinc-300 font-medium text-lg italic">Touch to Glow!</div>
+                
+                <!-- 당첨 요약 영역 -->
                 <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
+                
+                <!-- 결과 리스트 -->
                 <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
             
+            <!-- 개수 선택 -->
             <div class="flex gap-4 justify-center mb-8">
                 <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white text-black transition-all shadow-lg">1</button>
                 <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-14 h-14 rounded-2xl border border-white/10 font-bold bg-white/5 text-white hover:bg-white/10 transition-all">5</button>
@@ -90,11 +101,13 @@
             </button>
         </div>
 
+        <!-- 하단 상품 현황판 (1000개 표시 없음) -->
         <div class="glass-panel p-7 shadow-xl border-t border-white/10">
             <h2 class="text-[10px] font-bold mb-6 opacity-40 tracking-[0.2em] uppercase italic text-left">Prize Inventory</h2>
             <div id="prizes-status" class="space-y-5"></div>
         </div>
 
+        <!-- 관리자 상세 패널 -->
         <div id="admin-panel" class="hidden fixed inset-x-6 top-24 z-50 glass-panel bg-zinc-950/95 p-8 shadow-2xl border border-white/10">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                 <h2 class="font-black text-xl text-blue-400 italic">ADMIN DATA</h2>
@@ -106,6 +119,7 @@
     </div>
 
     <script>
+        // 상품 설정 (A상 500회 제한 / B~D상 분산 배출 로직 포함)
         const PRIZE_CONFIG = [
             { id: 'A', name: '바지', count: 1, hideCount: false, limitPerQuart: [0, 0, 1, 1] }, 
             { id: 'B', name: '반다나', count: 9, hideCount: false, limitPerQuart: [2, 5, 7, 9] }, 
@@ -120,7 +134,7 @@
         let drawQty = 1;
 
         function init() {
-            const saved = localStorage.getItem('lucky_final_v1');
+            const saved = localStorage.getItem('lucky_final_v100');
             if (saved) {
                 state = JSON.parse(saved);
             } else {
@@ -130,17 +144,18 @@
             render();
         }
 
-        function save() { localStorage.setItem('lucky_final_v1', JSON.stringify(state)); }
+        function save() { localStorage.setItem('lucky_final_v100', JSON.stringify(state)); }
 
         function fullReset() {
-            if(confirm("데이터를 초기화하시겠습니까?")) {
-                localStorage.removeItem('lucky_final_v1');
+            if(confirm("주의: 모든 데이터를 초기화하고 1000개 수량으로 리셋할까요?")) {
+                localStorage.removeItem('lucky_final_v100');
                 location.reload();
             }
         }
 
         function toggleAdminTab() {
-            document.getElementById('admin-panel').classList.toggle('hidden');
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('hidden');
         }
 
         function changeQty(n) {
@@ -175,11 +190,11 @@
             }).join('');
 
             adminContainer.innerHTML = `
-                <div class="mb-4 text-blue-400 font-bold italic">누적 참여: ${historyCount}회</div>
+                <div class="mb-4 text-blue-400 font-bold italic border-b border-white/10 pb-2">누적 참여 횟수: ${historyCount}회</div>
             ` + state.map(item => `
                 <div class="flex justify-between border-b border-white/5 pb-1">
                     <span>${item.id} - ${item.name}</span>
-                    <span>${item.count} EA</span>
+                    <span>${item.count} / ${PRIZE_CONFIG.find(p => p.id === item.id).count}</span>
                 </div>
             `).join('');
         }
@@ -245,9 +260,10 @@
                 
                 save();
                 render();
-                await new Promise(r => setTimeout(r, 100));
+                await new Promise(r => setTimeout(r, 120));
             }
 
+            // 당첨 요약 생성
             const summary = pickedList.reduce((acc, cur) => {
                 acc[cur.name] = (acc[cur.name] || 0) + 1;
                 return acc;
