@@ -15,8 +15,8 @@
             background-color: #ffffff;
             min-height: 100vh;
             color: #000000;
-            /* 하단 짤림 방지를 위해 150px의 넉넉한 여백 확보 */
-            padding-bottom: 150px; 
+            /* 하단 툴바가 가려도 엽서가 보이도록 바닥 공간을 200px 확보 */
+            padding-bottom: 200px; 
             overflow-x: hidden;
         }
 
@@ -27,10 +27,13 @@
             box-shadow: 10px 10px 0px #000000;
         }
 
+        /* [핵심 수정] 하단 현황판이 리스트 길이에 따라 무한히 늘어나도록 설정 */
         .inventory-card {
             height: auto !important;
+            min-height: fit-content !important;
             overflow: visible !important;
-            margin-bottom: 50px;
+            margin-bottom: 60px;
+            display: block !important;
         }
 
         .result-card { 
@@ -41,13 +44,6 @@
             border-radius: 1.2rem;
         }
 
-        .summary-badge { 
-            background: #000000; 
-            color: #ffffff;
-            border-radius: 99px;
-        }
-
-        /* 히스토리 아이템 스타일 */
         .history-item { 
             border: 1px solid #e5e7eb; 
             border-radius: 1rem; 
@@ -67,12 +63,7 @@
             color: #6b7280; 
         }
         
-        /* 당첨 강조 태그 (A~D등급) */
-        .tag-special { 
-            background: #f8ff00; 
-            color: #000; 
-            border: 1px solid #000; 
-        }
+        .tag-special { background: #f8ff00; color: #000; border: 1px solid #000; }
 
         @keyframes slideIn { 
             from { transform: translateY(12px); opacity: 0; } 
@@ -81,29 +72,17 @@
 
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        
-        .title-black {
-            color: #000000;
-            line-height: 1;
-        }
-
-        /* Glow 타이틀 색상: #f8ff00 */
+        .title-black { color: #000000; line-height: 1; }
         .glow-highlight {
             color: #f8ff00;
-            text-shadow: 
-                -1px -1px 0 #000,  
-                 1px -1px 0 #000,
-                -1px  1px 0 #000,
-                 1px  1px 0 #000;
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
         }
-
         textarea { font-family: monospace; font-size: 10px; resize: none; }
     </style>
 </head>
 <body class="py-10 px-6">
 
     <div class="max-w-md mx-auto relative">
-        <!-- 상단 타이틀 -->
         <div class="flex justify-between items-start mb-10">
             <div class="flex flex-col text-left">
                 <h1 class="text-3xl font-black tracking-tighter title-black">
@@ -114,7 +93,7 @@
             <button onclick="toggleAdminTab()" class="w-12 h-12 rounded-full border border-zinc-200 text-zinc-300 font-bold text-[10px] flex items-center justify-center">AD</button>
         </div>
 
-        <!-- 드로우 메인 카드 -->
+        <!-- 드로우 영역 -->
         <div class="main-card p-8 mb-12 text-center">
             <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
                 <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg italic">Touch to Start</div>
@@ -122,36 +101,31 @@
                 <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
             
-            <!-- 수량 선택 (1, 3, 5, 10) -->
             <div class="flex gap-3 justify-center mb-8">
-                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-black text-white transition-all">1</button>
-                <button onclick="changeQty(3)" id="qty-3" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">3</button>
-                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">5</button>
-                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">10</button>
+                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-black text-white">1</button>
+                <button onclick="changeQty(3)" id="qty-3" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black">3</button>
+                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black">5</button>
+                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black">10</button>
             </div>
 
-            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all">
-                <span id="draw-btn-label">1개 뽑기</span>
-            </button>
+            <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all">1개 뽑기</button>
         </div>
 
-        <!-- 상품 현황판 (pb-20으로 짤림 방지) -->
-        <div class="inventory-card p-7 pb-20">
+        <!-- [수정] 상품 현황판: pb-24로 하단 끝 엽서까지 확실히 노출 -->
+        <div class="inventory-card p-7 pb-24">
             <h2 class="text-[10px] font-bold mb-8 opacity-40 tracking-[0.2em] uppercase italic text-left">Prize Inventory</h2>
             <div id="prizes-status" class="space-y-6"></div>
         </div>
 
-        <!-- 관리자 히스토리 & 동기화 패널 (전체 화면) -->
+        <!-- 관리자 패널 -->
         <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
                 <h2 class="font-black text-2xl italic tracking-tighter">ADMIN & SYNC</h2>
                 <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm">CLOSE</button>
             </div>
             
-            <!-- 동기화 (기기간 데이터 이동) -->
             <div class="mb-10 p-6 border-2 border-dashed border-zinc-300 rounded-3xl bg-zinc-50">
-                <h3 class="font-black text-sm mb-2 text-left">Device Sync</h3>
-                <p class="text-[10px] opacity-60 mb-4 text-left">데이터를 PC로 옮기려면 아래 코드를 복사하세요.</p>
+                <h3 class="font-black text-sm mb-2 text-left">Device Sync Code</h3>
                 <textarea id="sync-data" class="w-full h-20 p-3 border border-zinc-300 rounded-lg mb-3" readonly></textarea>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="copySyncData()" class="py-2 bg-zinc-200 rounded-lg font-bold text-xs">코드 복사</button>
@@ -159,7 +133,6 @@
                 </div>
             </div>
 
-            <!-- 통계 요약 -->
             <div class="grid grid-cols-2 gap-4 mb-8 text-left">
                 <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50">
                     <p class="text-[10px] font-bold opacity-50 uppercase">총 드로우</p>
@@ -167,16 +140,13 @@
                 </div>
                 <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50">
                     <p class="text-[10px] font-bold opacity-50 uppercase">남은 재고</p>
-                    <p id="stat-remain" class="text-3xl font-black">1000</p>
+                    <p id="stat-remain" class="text-3xl font-black">0</p>
                 </div>
             </div>
 
-            <!-- 상품별 재고 상태 바 -->
             <div id="admin-prize-stats" class="space-y-2 mb-10"></div>
-
-            <!-- 세션별 상세 로그 -->
             <h3 class="font-black mb-4 text-lg text-left">Detailed History</h3>
-            <div id="history-log-list" class="space-y-4"></div>
+            <div id="history-log-list" class="space-y-4 text-left"></div>
 
             <button onclick="fullReset()" class="w-full mt-10 py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl font-bold uppercase text-xs">System Factory Reset</button>
         </div>
@@ -194,15 +164,12 @@
         ];
 
         let state = [];
-        let sessionLogs = []; 
+        let sessionLogs = [];
         let drawQty = 1;
 
-        const SYNC_KEY_STATE = 'glow_final_state_v12';
-        const SYNC_KEY_LOGS = 'glow_final_logs_v12';
-
         function init() {
-            const savedState = localStorage.getItem(SYNC_KEY_STATE);
-            const savedLogs = localStorage.getItem(SYNC_KEY_LOGS);
+            const savedState = localStorage.getItem('glow_final_v13');
+            const savedLogs = localStorage.getItem('glow_logs_v13');
             if (savedState) { state = JSON.parse(savedState); } 
             else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
             if (savedLogs) { sessionLogs = JSON.parse(savedLogs); }
@@ -211,44 +178,34 @@
         }
 
         function save() {
-            localStorage.setItem(SYNC_KEY_STATE, JSON.stringify(state));
-            localStorage.setItem(SYNC_KEY_LOGS, JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_final_v13', JSON.stringify(state));
+            localStorage.setItem('glow_logs_v13', JSON.stringify(sessionLogs));
             updateSyncText();
         }
 
-        // 동기화용 데이터 생성 (Base64 인코딩)
         function updateSyncText() {
             const syncObj = { state, sessionLogs };
             document.getElementById('sync-data').value = btoa(unescape(encodeURIComponent(JSON.stringify(syncObj))));
         }
 
         function copySyncData() {
-            const textarea = document.getElementById('sync-data');
-            textarea.select();
+            document.getElementById('sync-data').select();
             document.execCommand('copy');
-            alert("데이터 코드가 복사되었습니다! PC 브라우저 AD 페이지에 붙여넣으세요.");
+            alert("동기화 코드가 복사되었습니다.");
         }
 
         function importSyncData() {
-            const input = prompt("복사한 동기화 코드를 아래에 입력하세요:");
+            const input = prompt("동기화 코드를 입력하세요:");
             if (!input) return;
             try {
                 const decoded = JSON.parse(decodeURIComponent(escape(atob(input))));
-                if (confirm("현재 기기의 데이터를 삭제하고 가져온 데이터로 동기화할까요?")) {
-                    state = decoded.state;
-                    sessionLogs = decoded.sessionLogs;
-                    save();
-                    location.reload();
-                }
-            } catch (e) {
-                alert("올바르지 않은 코드입니다.");
-            }
+                state = decoded.state; sessionLogs = decoded.sessionLogs;
+                save(); location.reload();
+            } catch (e) { alert("잘못된 코드입니다."); }
         }
 
         function fullReset() {
-            if(confirm("모든 재고와 히스토리가 삭제됩니다. 계속하시겠습니까?")) {
-                localStorage.clear(); location.reload();
-            }
+            if(confirm("초기화하시겠습니까?")) { localStorage.clear(); location.reload(); }
         }
 
         function toggleAdminTab() {
@@ -259,12 +216,10 @@
         function changeQty(n) {
             drawQty = n;
             document.querySelectorAll('.qty-btn').forEach(btn => {
-                btn.classList.replace('bg-black', 'bg-white'); 
-                btn.classList.replace('text-white', 'text-black');
+                btn.classList.replace('bg-black', 'bg-white'); btn.classList.replace('text-white', 'text-black');
             });
             const activeBtn = document.getElementById(`qty-${n}`);
-            activeBtn.classList.replace('bg-white', 'bg-black'); 
-            activeBtn.classList.replace('text-black', 'text-white');
+            activeBtn.classList.replace('bg-white', 'bg-black'); activeBtn.classList.replace('text-black', 'text-white');
             document.getElementById('draw-btn-label').innerText = `${n}개 뽑기`;
         }
 
@@ -302,7 +257,6 @@
         async function executeDraw() {
             const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
             if (totalRemaining < drawQty) { alert("잔여 수량이 부족합니다."); return; }
-            
             document.getElementById('draw-button').disabled = true;
             document.getElementById('intro-text').classList.add('hidden');
             document.getElementById('summary-area').classList.add('hidden');
@@ -330,7 +284,6 @@
                 let rand = Math.floor(Math.random() * total);
                 let acc = 0; let picked = null;
                 for (let t of fallback) { acc += t.count; if (rand < acc) { picked = t; state.find(o => o.id === t.id).count--; break; } }
-                
                 pickedItems.push({ name: picked.name, grade: picked.id });
                 
                 const card = document.createElement('div');
@@ -340,10 +293,8 @@
                 render();
                 await new Promise(r => setTimeout(r, 100));
             }
-
             sessionLogs.push({ time: timeStr, items: pickedItems });
             save();
-
             const summary = pickedItems.reduce((acc, cur) => { acc[cur.name] = (acc[cur.name] || 0) + 1; return acc; }, {});
             document.getElementById('summary-area').classList.remove('hidden');
             Object.entries(summary).forEach(([name, count]) => {
@@ -352,7 +303,6 @@
             });
             document.getElementById('draw-button').disabled = false;
         }
-
         init();
     </script>
 </body>
