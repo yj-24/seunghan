@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>럭키드로우 프리미엄 - 반투명 Admin</title>
+    <title>럭키드로우 프리미엄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
@@ -25,6 +25,7 @@
             border-radius: 2rem;
         }
         .result-card { background: white; color: black; animation: slideIn 0.3s ease-out forwards; }
+        .summary-badge { background: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.3); }
         @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -34,13 +35,21 @@
 
     <div class="max-w-md mx-auto relative">
         <div class="flex justify-between items-center mb-8">
-            <h1 class="text-4xl font-black tracking-tighter italic text-white">LUCKY PICK</h1>
+            <h1 class="text-4xl font-black tracking-tighter italic text-white leading-none">LUCKY<br>PICK</h1>
             <button id="admin-trigger" onclick="toggleAdminTab()" class="w-10 h-10 rounded-full bg-white/10 text-white/20 font-bold text-[10px] hover:bg-white/20 hover:text-white/40 transition-colors">AD</button>
         </div>
 
+        <!-- 메인 드로우 영역 -->
         <div class="glass-panel p-8 shadow-2xl mb-6 text-center border-t border-white/20">
-            <div id="display-container" class="h-64 flex flex-col items-center justify-center mb-6 overflow-y-auto no-scrollbar">
-                <div id="intro-text" class="text-zinc-400 font-medium text-lg">행운을 확인하세요</div>
+            <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2">
+                <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg">행운을 확인하세요</div>
+                
+                <!-- [NEW] 당첨 요약 영역 -->
+                <div id="summary-area" class="w-full mb-4 flex flex-wrap justify-center gap-2 hidden">
+                    <!-- 요약 배지들이 여기에 생성됨 -->
+                </div>
+                
+                <!-- 개별 결과 리스트 -->
                 <div id="results-wrapper" class="w-full space-y-2"></div>
             </div>
             
@@ -55,32 +64,32 @@
             </button>
         </div>
 
+        <!-- 상품 현황판 -->
         <div class="glass-panel p-6 shadow-xl border-t border-white/10">
             <h2 class="text-xs font-bold mb-5 opacity-50 tracking-widest uppercase italic">Current Status</h2>
             <div id="prizes-status" class="space-y-4"></div>
         </div>
 
+        <!-- 관리자 패널 -->
         <div id="admin-panel" class="hidden fixed inset-x-5 top-20 z-50 glass-panel bg-zinc-900/95 p-8 shadow-2xl border border-white/20">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
-                <h2 class="font-black text-xl text-white underline decoration-blue-500 italic">ADMIN DATA</h2>
+                <h2 class="font-black text-xl text-white underline decoration-blue-500 italic text-left">ADMIN DATA</h2>
                 <button onclick="toggleAdminTab()" class="text-zinc-500 font-bold">CLOSE</button>
             </div>
-            <div id="admin-details" class="space-y-3 font-mono text-xs text-zinc-400 mb-8"></div>
+            <div id="admin-details" class="space-y-3 font-mono text-xs text-zinc-400 mb-8 text-left"></div>
             <button onclick="fullReset()" class="w-full py-4 bg-red-600/20 text-red-500 border border-red-600/30 rounded-xl text-xs font-bold uppercase tracking-widest">System Reset</button>
         </div>
     </div>
 
     <script>
-        // 상품 구성 및 명칭 변경 적용
-        // A상 500회 제한 / B~D상 구간별 분산 로직 포함
         const PRIZE_CONFIG = [
             { id: 'A', name: '바지', count: 1, hideCount: false, limitPerQuart: [0, 0, 1, 1] }, 
             { id: 'B', name: '반다나', count: 9, hideCount: false, limitPerQuart: [2, 5, 7, 9] }, 
             { id: 'C', name: '사인폴라로이드', count: 15, hideCount: false, limitPerQuart: [4, 8, 12, 15] },
             { id: 'D', name: '사인앨범', count: 15, hideCount: false, limitPerQuart: [4, 8, 12, 15] },
             { id: 'E', name: '손그림 로고 키링', count: 60, hideCount: false },
-            { id: 'F', name: '포토카드', count: 300, hideCount: true }, // 명칭 변경
-            { id: 'G', name: '엽서', count: 600, hideCount: true }     // 명칭 변경
+            { id: 'F', name: '포토카드', count: 300, hideCount: true },
+            { id: 'G', name: '엽서', count: 600, hideCount: true }
         ];
 
         let state = [];
@@ -107,8 +116,7 @@
         }
 
         function toggleAdminTab() {
-            const panel = document.getElementById('admin-panel');
-            panel.classList.toggle('hidden');
+            document.getElementById('admin-panel').classList.toggle('hidden');
         }
 
         function changeQty(n) {
@@ -128,9 +136,9 @@
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
                 return `
                     <div class="flex justify-between items-center ${out ? 'opacity-20' : ''}">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] text-zinc-500 font-bold uppercase">${item.id} PRIZE</span>
-                            <span class="font-bold text-lg">${item.name}</span>
+                        <div class="flex flex-col text-left">
+                            <span class="text-[10px] text-zinc-500 font-bold uppercase leading-none mb-1">${item.id} PRIZE</span>
+                            <span class="font-bold text-lg leading-tight text-white">${item.name}</span>
                         </div>
                         <span class="text-xs font-black ${item.hideCount && !out ? 'text-blue-400' : 'text-zinc-400'}">${statusText}</span>
                     </div>
@@ -150,6 +158,7 @@
         async function executeDraw() {
             const btn = document.getElementById('draw-button');
             const wrapper = document.getElementById('results-wrapper');
+            const summaryArea = document.getElementById('summary-area');
             const intro = document.getElementById('intro-text');
             
             const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
@@ -157,7 +166,11 @@
 
             btn.disabled = true;
             intro.classList.add('hidden');
+            summaryArea.classList.add('hidden');
+            summaryArea.innerHTML = "";
             wrapper.innerHTML = "";
+
+            let pickedList = []; // 이번 회차 당첨 상품들 저장
 
             for (let i = 0; i < drawQty; i++) {
                 const historyCount = 1000 - state.reduce((acc, cur) => acc + cur.count, 0);
@@ -174,37 +187,53 @@
                 });
 
                 const fallbackPool = pool.length > 0 ? pool : state.filter(item => item.count > 0 && !item.limitPerQuart);
-
                 const poolTotal = fallbackPool.reduce((acc, cur) => acc + cur.count, 0);
                 let rand = Math.floor(Math.random() * poolTotal);
-                let acc = 0;
+                let accTotal = 0;
                 let picked = null;
 
                 for (let target of fallbackPool) {
-                    acc += target.count;
-                    if (rand < acc) {
+                    accTotal += target.count;
+                    if (rand < accTotal) {
                         picked = target;
                         state.find(orig => orig.id === target.id).count--;
                         break;
                     }
                 }
 
+                pickedList.push(picked);
+
+                // 개별 결과 카드 생성
                 const card = document.createElement('div');
                 card.className = "result-card p-4 rounded-2xl flex justify-between items-center shadow-xl mb-2";
                 card.innerHTML = `
-                    <div class="flex flex-col">
-                        <span class="text-[10px] font-bold opacity-40 uppercase">${picked.id} RANK</span>
-                        <span class="text-xl font-black">${picked.name}</span>
+                    <div class="flex flex-col text-left">
+                        <span class="text-[10px] font-bold opacity-40 uppercase leading-none mb-1">${picked.id} RANK</span>
+                        <span class="text-xl font-black leading-tight">${picked.name}</span>
                     </div>
                     <div class="bg-black text-white text-[10px] px-3 py-1 rounded-full font-bold">당첨</div>
                 `;
-                wrapper.appendChild(card);
-                document.getElementById('display-container').scrollTop = document.getElementById('display-container').scrollHeight;
+                wrapper.prepend(card); // 최신 당첨이 위로 오게
                 
                 save();
                 render();
-                await new Promise(r => setTimeout(r, 150));
+                await new Promise(r => setTimeout(r, 120));
             }
+
+            // [NEW] 당첨 요약 로직 실행
+            const summary = pickedList.reduce((acc, cur) => {
+                acc[cur.name] = (acc[cur.name] || 0) + 1;
+                return acc;
+            }, {});
+
+            summaryArea.classList.remove('hidden');
+            Object.entries(summary).forEach(([name, count]) => {
+                const badge = document.createElement('div');
+                badge.className = "summary-badge px-3 py-1 rounded-full text-xs font-bold animate-pulse";
+                badge.innerText = `${name} x${count}`;
+                summaryArea.appendChild(badge);
+            });
+
             btn.disabled = false;
         }
 
