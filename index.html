@@ -26,11 +26,9 @@
     <div class="max-w-md mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-black text-gray-900">LUCKY DRAW</h1>
-            <!-- 관리자 비밀 버튼: 수량 확인/관리 -->
             <button onclick="toggleAdminTab()" class="text-xs text-gray-400 underline">수량 확인/관리</button>
         </div>
 
-        <!-- 메인 당첨 확인창 -->
         <div id="draw-section" class="bg-white rounded-3xl shadow-2xl p-8 text-center mb-8 border-4 border-black">
             <div id="status-text" class="h-40 flex items-center justify-center text-xl font-bold text-gray-400">
                 START를 눌러주세요!
@@ -40,34 +38,27 @@
             </button>
         </div>
 
-        <!-- 사용자용 상품 현황판 -->
         <div id="guest-inventory-section" class="bg-white rounded-2xl shadow-md p-6 mb-4">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h2 class="font-bold text-lg">상품 현황</h2>
                 <div id="draw-count-display" class="text-[10px] text-gray-400 font-mono italic"></div>
             </div>
-            <div id="guest-inventory" class="space-y-4 text-base">
-                <!-- 리스트 자동 생성 -->
-            </div>
+            <div id="guest-inventory" class="space-y-4 text-base"></div>
         </div>
 
-        <!-- 관리자 상세 제어판 (기본 숨김) -->
         <div id="admin-tab" class="hidden-tab bg-gray-800 text-white rounded-2xl shadow-xl p-6 mt-4">
             <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-                <h2 class="font-bold text-yellow-400 underline">상세 데이터 (Admin)</h2>
+                <h2 class="font-bold text-yellow-400 underline">실시간 상세 수량 (Admin)</h2>
                 <button onclick="toggleAdminTab()" class="text-xs bg-gray-600 px-2 py-1 rounded text-white">닫기</button>
             </div>
-            <div id="admin-inventory" class="space-y-2 text-sm font-mono text-gray-300">
-                <!-- 상세 수량 자동 생성 -->
-            </div>
+            <div id="admin-inventory" class="space-y-2 text-sm font-mono text-gray-300"></div>
             <div class="mt-6 pt-4 border-t border-gray-700">
-                <button onclick="resetData()" class="w-full py-2 bg-red-900 text-xs rounded text-gray-100 font-bold hover:bg-red-800 transition-colors">전체 데이터 리셋</button>
+                <button onclick="resetData()" class="w-full py-2 bg-red-900 text-xs rounded text-gray-100 font-bold hover:bg-red-800 transition-colors">데이터 초기화 (전체 리셋)</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 초기 데이터 설정 (총 1,000개)
         const DEFAULT_ITEMS = [
             { id: 'A', name: '바지', count: 1, hideCount: false, total: 1 },
             { id: 'B', name: '반다나', count: 9, hideCount: false, total: 9 },
@@ -104,9 +95,6 @@
         function toggleAdminTab() {
             const tab = document.getElementById('admin-tab');
             tab.classList.toggle('hidden-tab');
-            if (!tab.classList.contains('hidden-tab')) {
-                tab.scrollIntoView({ behavior: 'smooth' });
-            }
         }
 
         function getDrawHistoryCount() {
@@ -123,38 +111,39 @@
 
             let totalLeft = 0;
 
-            // [사용자용 화면] F, G 정보 완전 은닉
+            // [핵심] 손님용 화면 렌더링 - F, G 수량 숨기기 로직
             guestContainer.innerHTML = items.map(item => {
                 totalLeft += item.count;
                 const isSoldOut = item.count === 0;
-                let countLabel = "";
+                let displayLabel = "";
 
-                if (item.hideCount) {
-                    countLabel = isSoldOut ? "소진 (SOLD OUT)" : "재고 있음";
+                // F 또는 G 등급이거나 hideCount가 true인 경우 수량 숨김
+                if (item.hideCount === true || item.id === 'F' || item.id === 'G') {
+                    displayLabel = isSoldOut ? "소진 (SOLD OUT)" : "재고 있음";
                 } else {
-                    countLabel = isSoldOut ? "소진" : `${item.count}개 남음`;
+                    displayLabel = isSoldOut ? "소진" : `${item.count}개 남음`;
                 }
 
                 return `
                     <div class="flex justify-between items-center ${isSoldOut ? 'text-gray-300 line-through' : 'text-gray-800'}">
                         <span class="font-bold text-lg">${item.id}. ${item.name}</span>
-                        <span class="font-bold ${item.hideCount && !isSoldOut ? 'text-blue-500' : 'text-gray-500'} text-sm">${countLabel}</span>
+                        <span class="font-bold ${item.hideCount && !isSoldOut ? 'text-blue-500' : 'text-gray-500'} text-sm">${displayLabel}</span>
                     </div>
                 `;
             }).join('');
 
-            // [관리자용 화면] 상세 수량 추적
+            // 관리자용은 모든 수량 노출
             adminContainer.innerHTML = items.map(item => `
                 <div class="flex justify-between border-b border-gray-700 pb-1">
                     <span>${item.id}. ${item.name}</span>
-                    <span class="${item.count < 5 ? 'text-yellow-400' : ''}">${item.count} / ${item.total}</span>
+                    <span>${item.count} / ${item.total}</span>
                 </div>
             `).join('');
 
             if(totalLeft === 0) {
                 const btn = document.getElementById('main-btn');
                 btn.disabled = true;
-                btn.innerText = "이벤트가 종료되었습니다";
+                btn.innerText = "이벤트 종료";
                 btn.classList.replace('bg-black', 'bg-gray-300');
             }
         }
@@ -168,7 +157,7 @@
             status.innerHTML = `<div class="animate-bounce text-black text-4xl">?</div>`;
 
             setTimeout(() => {
-                // 핵심 로직: 누적 참여 500회 미만일 때 A상(바지) 제외
+                // A상 당첨 제한: 500회 이후부터 등장
                 const availablePool = items.filter(item => {
                     if (item.id === 'A' && historyCount < 500) return false;
                     return item.count > 0;
@@ -177,7 +166,7 @@
                 const poolTotal = availablePool.reduce((sum, item) => sum + item.count, 0);
                 
                 if (poolTotal <= 0) {
-                    status.innerText = "남은 상품이 없습니다.";
+                    status.innerText = "종료되었습니다.";
                     return;
                 }
 
@@ -209,10 +198,6 @@
 
         loadData();
         render();
-
-        window.onbeforeunload = function() {
-            return "창을 닫으면 당첨 화면이 사라집니다.";
-        };
     </script>
 </body>
 </html>
