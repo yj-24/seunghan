@@ -1,57 +1,228 @@
-// 누적 참여 횟수 계산 함수
-function getTotalDrawCount() {
-    let currentTotal = items.reduce((sum, item) => sum + item.count, 0);
-    return 1000 - currentTotal; // 시작이 1,000개이므로
-}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>럭키드로우 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            touch-action: manipulation;
+            user-select: none;
+            background-color: #f3f4f6;
+        }
+        .hidden-tab { display: none; }
+        /* 당첨 애니메이션 */
+        .win-effect { animation: confeti 0.5s ease-out; }
+        @keyframes confeti {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="py-10 px-4">
 
-function startDraw() {
-    const btn = document.getElementById('main-btn');
-    const status = document.getElementById('status-text');
-    const totalCount = items.reduce((sum, item) => sum + item.count, 0);
-    
-    if (totalCount <= 0) return;
+    <div class="max-w-md mx-auto">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-black text-gray-900">LUCKY DRAW</h1>
+            <!-- 관리자 탭 토글 버튼 -->
+            <button onclick="toggleAdminTab()" class="text-xs text-gray-400 underline">수량 확인/관리</button>
+        </div>
 
-    // 현재까지 몇 명이 참여했는지 계산
-    const drawCountSoFar = getTotalDrawCount();
+        <!-- 메인 뽑기 구역 -->
+        <div id="draw-section" class="bg-white rounded-3xl shadow-2xl p-8 text-center mb-8 border-4 border-black">
+            <div id="status-text" class="h-40 flex items-center justify-center text-xl font-bold text-gray-400">
+                START를 눌러주세요!
+            </div>
+            <button id="main-btn" onclick="startDraw()" class="w-full py-6 bg-black text-white rounded-2xl text-3xl font-black shadow-lg active:scale-95 transition-all">
+                START !
+            </button>
+        </div>
 
-    btn.disabled = true;
-    status.innerHTML = `<div class="animate-bounce text-black text-4xl">?</div>`;
+        <!-- 일반 사용자용 상품 현황 (F, G 수량 숨김) -->
+        <div id="guest-inventory-section" class="bg-white rounded-2xl shadow-md p-6 mb-4">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="font-bold">상품 현황</h2>
+                <div id="draw-count-display" class="text-[10px] text-gray-400 font-mono"></div>
+            </div>
+            <div id="guest-inventory" class="space-y-3 text-base">
+                <!-- 자바스크립트로 렌더링 -->
+            </div>
+        </div>
 
-    setTimeout(() => {
-        let selected = null;
-        
-        // 300회 미만 참여 시 A상이 뽑히지 않도록 필터링
-        let availableItems = items.filter(item => {
-            if (item.id === 'A' && drawCountSoFar < 500) {
-                return false; // 500회 전까지는 리스트에서 제외
-            }
-            return item.count > 0;
-        });
+        <!-- 관리자 전용 상세 현황 탭 (기본 숨김) -->
+        <div id="admin-tab" class="hidden-tab bg-gray-800 text-white rounded-2xl shadow-xl p-6 mt-4">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
+                <h2 class="font-bold text-yellow-400 underline">상세 수량 (Admin Only)</h2>
+                <button onclick="toggleAdminTab()" class="text-xs bg-gray-600 px-2 py-1 rounded text-white">닫기</button>
+            </div>
+            <div id="admin-inventory" class="space-y-2 text-sm font-mono">
+                <!-- 자바스크립트로 렌더링 -->
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-700">
+                <button onclick="resetData()" class="w-full py-2 bg-red-900 text-xs rounded text-gray-300 hover:bg-red-800 transition-colors">데이터 전체 초기화 (주의)</button>
+            </div>
+        </div>
+    </div>
 
-        // 필터링된 상품들 중에서의 새로운 총합 계산
-        const availableTotal = availableItems.reduce((sum, item) => sum + item.count, 0);
-        let random = Math.floor(Math.random() * availableTotal);
-        let currentSum = 0;
+    <script>
+        // 초기 상품 구성
+        const DEFAULT_ITEMS = [
+            { id: 'A', name: '바지', count: 1, hideCount: false },
+            { id: 'B', name: '반다나', count: 9, hideCount: false },
+            { id: 'C', name: '사인폴라로이드', count: 15, hideCount: false },
+            { id: 'D', name: '사인앨범', count: 15, hideCount: false },
+            { id: 'E', name: '손그림 로고 키링', count: 60, hideCount: false },
+            { id: 'F', name: '포토카드 (1종)', count: 300, hideCount: true },
+            { id: 'G', name: '티저 엽서', count: 600, hideCount: true }
+        ];
 
-        for (let item of availableItems) {
-            currentSum += item.count;
-            if (random < currentSum) {
-                selected = item;
-                // 실제 원본 배열(items)에서 수량 차감
-                const originalItem = items.find(i => i.id === selected.id);
-                originalItem.count--;
-                break;
+        let items = [];
+
+        // 데이터 로드 (브라우저 저장소 확인)
+        function loadData() {
+            const saved = localStorage.getItem('luckyDrawData');
+            if (saved) {
+                items = JSON.parse(saved);
+            } else {
+                items = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
+                saveData();
             }
         }
 
-        saveData();
-        status.innerHTML = `
-            <div class="animate-pulse text-black">
-                <div class="text-blue-600 text-sm font-bold mb-1">${selected.id}등급 당첨!</div>
-                <div class="text-4xl font-black">${selected.name}</div>
-            </div>
-        `;
+        // 데이터 저장
+        function saveData() {
+            localStorage.setItem('luckyDrawData', JSON.stringify(items));
+        }
+
+        // 초기화 함수
+        function resetData() {
+            if(confirm("모든 데이터를 초기 상태(1,000개)로 리셋하시겠습니까?")) {
+                localStorage.removeItem('luckyDrawData');
+                location.reload();
+            }
+        }
+
+        // 관리자 탭 토글
+        function toggleAdminTab() {
+            const tab = document.getElementById('admin-tab');
+            tab.classList.toggle('hidden-tab');
+            if (!tab.classList.contains('hidden-tab')) {
+                tab.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // 현재까지 몇 번 참여했는지 계산
+        function getDrawHistoryCount() {
+            const currentTotal = items.reduce((sum, item) => sum + item.count, 0);
+            return 1000 - currentTotal;
+        }
+
+        // 화면 렌더링
+        function render() {
+            const guestContainer = document.getElementById('guest-inventory');
+            const adminContainer = document.getElementById('admin-inventory');
+            const historyCount = getDrawHistoryCount();
+            
+            document.getElementById('draw-count-display').innerText = `누적 참여: ${historyCount}회`;
+
+            let totalLeft = 0;
+
+            // 일반용 현황판
+            guestContainer.innerHTML = items.map(item => {
+                totalLeft += item.count;
+                const isSoldOut = item.count === 0;
+                let countLabel = item.count;
+
+                if (item.hideCount) {
+                    countLabel = item.count > 0 ? "재고 있음" : "소진";
+                }
+
+                return `
+                    <div class="flex justify-between items-center ${isSoldOut ? 'text-gray-300 line-through' : 'text-gray-700'}">
+                        <span class="font-bold">${item.id}. ${item.name}</span>
+                        <span class="font-bold ${item.hideCount && !isSoldOut ? 'text-blue-500' : ''}">${countLabel}</span>
+                    </div>
+                `;
+            }).join('');
+
+            // 관리자용 상세판
+            adminContainer.innerHTML = items.map(item => `
+                <div class="flex justify-between border-b border-gray-700 pb-1">
+                    <span>${item.id}. ${item.name}</span>
+                    <span class="${item.count < 3 ? 'text-red-400 font-bold' : ''}">${item.count}개</span>
+                </div>
+            `).join('');
+
+            // 전체 소진 시 버튼 비활성화
+            if(totalLeft === 0) {
+                const btn = document.getElementById('main-btn');
+                btn.disabled = true;
+                btn.innerText = "이벤트 종료";
+                btn.classList.replace('bg-black', 'bg-gray-300');
+            }
+        }
+
+        // 핵심: 뽑기 로직
+        function startDraw() {
+            const btn = document.getElementById('main-btn');
+            const status = document.getElementById('status-text');
+            const historyCount = getDrawHistoryCount();
+            
+            btn.disabled = true;
+            status.innerHTML = `<div class="animate-bounce text-black text-4xl">?</div>`;
+
+            setTimeout(() => {
+                // A상 당첨 제어: 500회 미만일 경우 A상을 후보에서 제외
+                const availablePool = items.filter(item => {
+                    if (item.id === 'A' && historyCount < 500) return false;
+                    return item.count > 0;
+                });
+
+                const poolTotal = availablePool.reduce((sum, item) => sum + item.count, 0);
+                
+                if (poolTotal <= 0) {
+                    status.innerText = "남은 상품이 없습니다.";
+                    return;
+                }
+
+                let random = Math.floor(Math.random() * poolTotal);
+                let currentSum = 0;
+                let selected = null;
+
+                for (let item of availablePool) {
+                    currentSum += item.count;
+                    if (random < currentSum) {
+                        selected = item;
+                        // 원본 데이터에서 수량 차감
+                        const original = items.find(i => i.id === selected.id);
+                        original.count--;
+                        break;
+                    }
+                }
+
+                saveData();
+                status.innerHTML = `
+                    <div class="win-effect text-black">
+                        <div class="text-blue-600 text-sm font-bold mb-1">${selected.id}등급 당첨!</div>
+                        <div class="text-4xl font-black">${selected.name}</div>
+                    </div>
+                `;
+                render();
+                btn.disabled = false;
+            }, 800);
+        }
+
+        // 초기 실행
+        loadData();
         render();
-        btn.disabled = false;
-    }, 700);
-}
+
+        // 새로고침 방지 경고
+        window.onbeforeunload = function() {
+            return "페이지를 새로고침하면 당첨 결과 화면이 사라질 수 있습니다.";
+        };
+    </script>
+</body>
+</html>
