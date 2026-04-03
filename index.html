@@ -3,58 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>럭키드로우 시스템</title>
+    <title>럭키드로우 프리미엄</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
+        
         body { 
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            background-color: #f3f4f6;
+            /* 배경 이미지 설정: 원하는 이미지 URL로 교체 가능 */
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                        url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
         }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
         .hidden-tab { display: none; }
-        .win-effect { animation: confeti 0.5s ease-out; }
-        @keyframes confeti {
-            0% { transform: scale(0.5); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
+        
+        .result-item {
+            animation: slideUp 0.4s ease-out forwards;
+            opacity: 0;
         }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* 스크롤바 숨기기 */
+        ::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="py-10 px-4">
+<body class="py-6 px-4">
 
     <div class="max-w-md mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-black text-gray-900">LUCKY DRAW</h1>
-            <button onclick="toggleAdminTab()" class="text-xs text-gray-400 underline">수량 확인/관리</button>
+        <!-- 헤더 -->
+        <div class="flex justify-between items-center mb-6 text-white">
+            <h1 class="text-3xl font-black tracking-tighter">LUCKY PICK</h1>
+            <button onclick="toggleAdminTab()" class="text-xs opacity-50 underline">ADMIN</button>
         </div>
 
-        <div id="draw-section" class="bg-white rounded-3xl shadow-2xl p-8 text-center mb-8 border-4 border-black">
-            <div id="status-text" class="h-40 flex items-center justify-center text-xl font-bold text-gray-400">
-                START를 눌러주세요!
+        <!-- 메인 카드 -->
+        <div class="glass rounded-[2.5rem] shadow-2xl p-8 text-center mb-6 border-b-4 border-black/10">
+            <!-- 당첨 결과 영역 -->
+            <div id="status-area" class="h-64 flex flex-col items-center justify-center overflow-y-auto pt-4 mb-4">
+                <div id="status-text" class="text-gray-400 font-bold text-lg">
+                    행운을 뽑아보세요!
+                </div>
+                <div id="results-list" class="w-full space-y-2"></div>
             </div>
-            <button id="main-btn" onclick="startDraw()" class="w-full py-6 bg-black text-white rounded-2xl text-3xl font-black shadow-lg active:scale-95 transition-all">
-                START !
+            
+            <!-- 개수 선택 버튼 -->
+            <div class="flex gap-2 mb-4 justify-center">
+                <button onclick="setDrawCount(1)" id="btn-1" class="draw-qty-btn w-12 h-10 rounded-xl border-2 border-black font-bold bg-black text-white transition-all">1</button>
+                <button onclick="setDrawCount(5)" id="btn-5" class="draw-qty-btn w-12 h-10 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">5</button>
+                <button onclick="setDrawCount(10)" id="btn-10" class="draw-qty-btn w-12 h-10 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">10</button>
+            </div>
+
+            <!-- 메인 버튼 -->
+            <button id="main-btn" onclick="startDraw()" class="w-full py-5 bg-black text-white rounded-2xl text-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-zinc-800 disabled:bg-zinc-300">
+                <span id="btn-text">1개 뽑기</span>
             </button>
         </div>
 
-        <div id="guest-inventory-section" class="bg-white rounded-2xl shadow-md p-6 mb-4">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h2 class="font-bold text-lg">상품 현황</h2>
-                <div id="draw-count-display" class="text-[10px] text-gray-400 font-mono italic"></div>
+        <!-- 상품 현황판 -->
+        <div class="glass rounded-[2rem] shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-4 border-b pb-2 border-black/5">
+                <h2 class="font-bold text-zinc-900">상품 현황</h2>
+                <div id="total-draw-info" class="text-[10px] font-mono text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full"></div>
             </div>
-            <div id="guest-inventory" class="space-y-4 text-base"></div>
+            <div id="guest-inventory" class="space-y-3.5"></div>
         </div>
 
-        <div id="admin-tab" class="hidden-tab bg-gray-800 text-white rounded-2xl shadow-xl p-6 mt-4">
-            <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-2">
-                <h2 class="font-bold text-yellow-400 underline">실시간 상세 수량 (Admin)</h2>
-                <button onclick="toggleAdminTab()" class="text-xs bg-gray-600 px-2 py-1 rounded text-white">닫기</button>
+        <!-- 관리자 탭 -->
+        <div id="admin-tab" class="hidden-tab bg-zinc-900 text-white rounded-[2rem] p-6 mt-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
+                <h2 class="font-bold text-yellow-400">ADMIN DATA</h2>
+                <button onclick="toggleAdminTab()" class="text-[10px] bg-zinc-700 px-2 py-1 rounded">CLOSE</button>
             </div>
-            <div id="admin-inventory" class="space-y-2 text-sm font-mono text-gray-300"></div>
-            <div class="mt-6 pt-4 border-t border-gray-700">
-                <button onclick="resetData()" class="w-full py-2 bg-red-900 text-xs rounded text-gray-100 font-bold hover:bg-red-800 transition-colors">데이터 초기화 (전체 리셋)</button>
-            </div>
+            <div id="admin-inventory" class="space-y-2 text-xs font-mono text-zinc-400"></div>
+            <button onclick="resetData()" class="w-full mt-6 py-3 bg-red-950 text-[10px] rounded-xl text-red-400 font-bold border border-red-900/50">DATA RESET</button>
         </div>
     </div>
 
@@ -70,9 +107,10 @@
         ];
 
         let items = [];
+        let currentDrawCount = 1;
 
         function loadData() {
-            const saved = localStorage.getItem('luckyDrawData');
+            const saved = localStorage.getItem('luckyDrawData_v2');
             if (saved) {
                 items = JSON.parse(saved);
             } else {
@@ -82,118 +120,113 @@
         }
 
         function saveData() {
-            localStorage.setItem('luckyDrawData', JSON.stringify(items));
+            localStorage.setItem('luckyDrawData_v2', JSON.stringify(items));
         }
 
         function resetData() {
-            if(confirm("모든 데이터를 초기 수량(1,000개)으로 리셋하시겠습니까?")) {
-                localStorage.removeItem('luckyDrawData');
+            if(confirm("모든 데이터를 1,000개로 리셋할까요?")) {
+                localStorage.removeItem('luckyDrawData_v2');
                 location.reload();
             }
         }
 
-        function toggleAdminTab() {
-            const tab = document.getElementById('admin-tab');
-            tab.classList.toggle('hidden-tab');
+        function setDrawCount(num) {
+            currentDrawCount = num;
+            document.querySelectorAll('.draw-qty-btn').forEach(btn => {
+                btn.classList.replace('bg-black', 'bg-white');
+                btn.classList.replace('text-white', 'text-black');
+            });
+            const selectedBtn = document.getElementById(`btn-${num}`);
+            selectedBtn.classList.replace('bg-white', 'bg-black');
+            selectedBtn.classList.replace('text-black', 'text-white');
+            document.getElementById('btn-text').innerText = `${num}개 뽑기`;
         }
 
-        function getDrawHistoryCount() {
-            const currentTotal = items.reduce((sum, item) => sum + item.count, 0);
-            return 1000 - currentTotal;
+        function toggleAdminTab() {
+            document.getElementById('admin-tab').classList.toggle('hidden-tab');
         }
 
         function render() {
             const guestContainer = document.getElementById('guest-inventory');
             const adminContainer = document.getElementById('admin-inventory');
-            const historyCount = getDrawHistoryCount();
+            const historyCount = 1000 - items.reduce((s, i) => s + i.count, 0);
             
-            document.getElementById('draw-count-display').innerText = `Total Draw: ${historyCount}`;
+            document.getElementById('total-draw-info').innerText = `TOTAL: ${historyCount}/1000`;
 
-            let totalLeft = 0;
-
-            // [핵심] 손님용 화면 렌더링 - F, G 수량 숨기기 로직
             guestContainer.innerHTML = items.map(item => {
-                totalLeft += item.count;
                 const isSoldOut = item.count === 0;
-                let displayLabel = "";
-
-                // F 또는 G 등급이거나 hideCount가 true인 경우 수량 숨김
-                if (item.hideCount === true || item.id === 'F' || item.id === 'G') {
-                    displayLabel = isSoldOut ? "소진 (SOLD OUT)" : "재고 있음";
-                } else {
-                    displayLabel = isSoldOut ? "소진" : `${item.count}개 남음`;
-                }
-
+                let label = item.hideCount ? (isSoldOut ? "소진" : "재고 있음") : (isSoldOut ? "소진" : `${item.count}개`);
                 return `
-                    <div class="flex justify-between items-center ${isSoldOut ? 'text-gray-300 line-through' : 'text-gray-800'}">
-                        <span class="font-bold text-lg">${item.id}. ${item.name}</span>
-                        <span class="font-bold ${item.hideCount && !isSoldOut ? 'text-blue-500' : 'text-gray-500'} text-sm">${displayLabel}</span>
+                    <div class="flex justify-between items-center ${isSoldOut ? 'opacity-30' : 'text-zinc-800'}">
+                        <span class="font-bold text-sm">${item.id}. ${item.name}</span>
+                        <span class="text-xs font-black ${item.hideCount && !isSoldOut ? 'text-blue-600' : 'text-zinc-400'}">${label}</span>
                     </div>
                 `;
             }).join('');
 
-            // 관리자용은 모든 수량 노출
             adminContainer.innerHTML = items.map(item => `
-                <div class="flex justify-between border-b border-gray-700 pb-1">
+                <div class="flex justify-between border-b border-white/5 pb-1">
                     <span>${item.id}. ${item.name}</span>
                     <span>${item.count} / ${item.total}</span>
                 </div>
             `).join('');
-
-            if(totalLeft === 0) {
-                const btn = document.getElementById('main-btn');
-                btn.disabled = true;
-                btn.innerText = "이벤트 종료";
-                btn.classList.replace('bg-black', 'bg-gray-300');
-            }
         }
 
-        function startDraw() {
+        async function startDraw() {
             const btn = document.getElementById('main-btn');
-            const status = document.getElementById('status-text');
-            const historyCount = getDrawHistoryCount();
+            const resultsList = document.getElementById('results-list');
+            const statusText = document.getElementById('status-text');
             
-            btn.disabled = true;
-            status.innerHTML = `<div class="animate-bounce text-black text-4xl">?</div>`;
+            let totalAvailable = items.reduce((s, i) => s + i.count, 0);
+            if (totalAvailable < currentDrawCount) {
+                alert(`남은 상품이 ${totalAvailable}개뿐입니다.`);
+                return;
+            }
 
-            setTimeout(() => {
-                // A상 당첨 제한: 500회 이후부터 등장
-                const availablePool = items.filter(item => {
+            btn.disabled = true;
+            statusText.classList.add('hidden');
+            resultsList.innerHTML = "";
+
+            for (let i = 0; i < currentDrawCount; i++) {
+                const historyCount = 1000 - items.reduce((s, item) => s + item.count, 0);
+                
+                // A상 500회 제한 로직
+                const pool = items.filter(item => {
                     if (item.id === 'A' && historyCount < 500) return false;
                     return item.count > 0;
                 });
 
-                const poolTotal = availablePool.reduce((sum, item) => sum + item.count, 0);
-                
-                if (poolTotal <= 0) {
-                    status.innerText = "종료되었습니다.";
-                    return;
-                }
-
+                const poolTotal = pool.reduce((s, item) => s + item.count, 0);
                 let random = Math.floor(Math.random() * poolTotal);
                 let currentSum = 0;
                 let selected = null;
 
-                for (let item of availablePool) {
+                for (let item of pool) {
                     currentSum += item.count;
                     if (random < currentSum) {
                         selected = item;
-                        const original = items.find(i => i.id === selected.id);
-                        original.count--;
+                        items.find(orig => orig.id === item.id).count--;
                         break;
                     }
                 }
 
-                saveData();
-                status.innerHTML = `
-                    <div class="win-effect text-black">
-                        <div class="text-blue-600 text-sm font-bold mb-1">${selected.id}등급 당첨!</div>
-                        <div class="text-4xl font-black">${selected.name}</div>
-                    </div>
+                const resultDiv = document.createElement('div');
+                resultDiv.className = "result-item bg-black text-white p-3 rounded-xl flex justify-between items-center shadow-lg";
+                resultDiv.innerHTML = `
+                    <span class="text-xs font-bold opacity-50">${selected.id}등급</span>
+                    <span class="font-black text-lg">${selected.name}</span>
+                    <span class="text-[10px] border border-white/30 px-2 py-0.5 rounded">WIN</span>
                 `;
+                resultsList.appendChild(resultDiv);
+                
+                // 다중 추첨 시 리스트 아래로 스크롤
+                document.getElementById('status-area').scrollTop = document.getElementById('status-area').scrollHeight;
+                
+                saveData();
                 render();
-                btn.disabled = false;
-            }, 800);
+                await new Promise(r => setTimeout(r, 200)); // 순차적 노출 효과
+            }
+            btn.disabled = false;
         }
 
         loadData();
