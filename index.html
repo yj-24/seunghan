@@ -7,230 +7,208 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
-        
         body { 
             font-family: 'Pretendard', sans-serif; 
             touch-action: manipulation;
             user-select: none;
-            /* 배경 이미지 설정: 원하는 이미지 URL로 교체 가능 */
-            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
-                        url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop');
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
-            background-attachment: fixed;
             min-height: 100vh;
+            color: white;
         }
-
-        .glass {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
         }
-
-        .hidden-tab { display: none; }
-        
-        .result-item {
-            animation: slideUp 0.4s ease-out forwards;
-            opacity: 0;
-        }
-
-        @keyframes slideUp {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        /* 스크롤바 숨기기 */
-        ::-webkit-scrollbar { display: none; }
+        .result-card { background: white; color: black; animation: slideIn 0.3s ease-out forwards; }
+        @keyframes slideIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .hidden { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
-<body class="py-6 px-4">
+<body class="py-8 px-5">
 
-    <div class="max-w-md mx-auto">
-        <!-- 헤더 -->
-        <div class="flex justify-between items-center mb-6 text-white">
-            <h1 class="text-3xl font-black tracking-tighter">LUCKY PICK</h1>
-            <button onclick="toggleAdminTab()" class="text-xs opacity-50 underline">ADMIN</button>
+    <div class="max-w-md mx-auto relative">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-black tracking-tighter italic text-white">LUCKY PICK</h1>
+            <button id="admin-trigger" onclick="toggleAdminTab()" class="w-10 h-10 opacity-0 cursor-default">AD</button>
         </div>
 
-        <!-- 메인 카드 -->
-        <div class="glass rounded-[2.5rem] shadow-2xl p-8 text-center mb-6 border-b-4 border-black/10">
-            <!-- 당첨 결과 영역 -->
-            <div id="status-area" class="h-64 flex flex-col items-center justify-center overflow-y-auto pt-4 mb-4">
-                <div id="status-text" class="text-gray-400 font-bold text-lg">
-                    행운을 뽑아보세요!
-                </div>
-                <div id="results-list" class="w-full space-y-2"></div>
+        <div class="glass-panel p-8 shadow-2xl mb-6 text-center border-t border-white/20">
+            <div id="display-container" class="h-64 flex flex-col items-center justify-center mb-6 overflow-y-auto no-scrollbar">
+                <div id="intro-text" class="text-zinc-400 font-medium text-lg">행운을 확인하세요</div>
+                <div id="results-wrapper" class="w-full space-y-2"></div>
             </div>
             
-            <!-- 개수 선택 버튼 -->
-            <div class="flex gap-2 mb-4 justify-center">
-                <button onclick="setDrawCount(1)" id="btn-1" class="draw-qty-btn w-12 h-10 rounded-xl border-2 border-black font-bold bg-black text-white transition-all">1</button>
-                <button onclick="setDrawCount(5)" id="btn-5" class="draw-qty-btn w-12 h-10 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">5</button>
-                <button onclick="setDrawCount(10)" id="btn-10" class="draw-qty-btn w-12 h-10 rounded-xl border-2 border-black font-bold bg-white text-black transition-all">10</button>
+            <div class="flex gap-3 justify-center mb-6">
+                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-12 h-12 rounded-2xl border border-white/20 font-bold bg-white text-black transition-all">1</button>
+                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-12 h-12 rounded-2xl border border-white/20 font-bold hover:bg-white/10 transition-all">5</button>
+                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-2xl border border-white/20 font-bold hover:bg-white/10 transition-all">10</button>
             </div>
 
-            <!-- 메인 버튼 -->
-            <button id="main-btn" onclick="startDraw()" class="w-full py-5 bg-black text-white rounded-2xl text-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-zinc-800 disabled:bg-zinc-300">
-                <span id="btn-text">1개 뽑기</span>
+            <button id="draw-button" onclick="executeDraw()" class="w-full py-5 bg-white text-black rounded-2xl text-2xl font-black shadow-[0_0_20px_rgba(255,255,255,0.3)] active:scale-95 transition-all disabled:opacity-30">
+                <span id="draw-btn-label">1개 뽑기</span>
             </button>
         </div>
 
-        <!-- 상품 현황판 -->
-        <div class="glass rounded-[2rem] shadow-lg p-6 mb-8">
-            <div class="flex justify-between items-center mb-4 border-b pb-2 border-black/5">
-                <h2 class="font-bold text-zinc-900">상품 현황</h2>
-                <div id="total-draw-info" class="text-[10px] font-mono text-zinc-400 bg-zinc-100 px-2 py-0.5 rounded-full"></div>
-            </div>
-            <div id="guest-inventory" class="space-y-3.5"></div>
+        <div class="glass-panel p-6 shadow-xl border-t border-white/10">
+            <h2 class="text-xs font-bold mb-5 opacity-50 tracking-widest uppercase italic">Current Status</h2>
+            <div id="prizes-status" class="space-y-4"></div>
         </div>
 
-        <!-- 관리자 탭 -->
-        <div id="admin-tab" class="hidden-tab bg-zinc-900 text-white rounded-[2rem] p-6 mt-4 shadow-2xl">
-            <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
-                <h2 class="font-bold text-yellow-400">ADMIN DATA</h2>
-                <button onclick="toggleAdminTab()" class="text-[10px] bg-zinc-700 px-2 py-1 rounded">CLOSE</button>
+        <div id="admin-panel" class="hidden fixed inset-x-5 top-20 z-50 glass-panel bg-zinc-900/95 p-8 shadow-2xl border border-white/20">
+            <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                <h2 class="font-black text-xl text-white underline decoration-blue-500 italic">ADMIN DATA</h2>
+                <button onclick="toggleAdminTab()" class="text-zinc-500 font-bold">CLOSE</button>
             </div>
-            <div id="admin-inventory" class="space-y-2 text-xs font-mono text-zinc-400"></div>
-            <button onclick="resetData()" class="w-full mt-6 py-3 bg-red-950 text-[10px] rounded-xl text-red-400 font-bold border border-red-900/50">DATA RESET</button>
+            <div id="admin-details" class="space-y-3 font-mono text-xs text-zinc-400 mb-8"></div>
+            <button onclick="fullReset()" class="w-full py-4 bg-red-600/20 text-red-500 border border-red-600/30 rounded-xl text-xs font-bold uppercase tracking-widest">System Reset</button>
         </div>
     </div>
 
     <script>
-        const DEFAULT_ITEMS = [
-            { id: 'A', name: '바지', count: 1, hideCount: false, total: 1 },
-            { id: 'B', name: '반다나', count: 9, hideCount: false, total: 9 },
-            { id: 'C', name: '사인폴라로이드', count: 15, hideCount: false, total: 15 },
-            { id: 'D', name: '사인앨범', count: 15, hideCount: false, total: 15 },
-            { id: 'E', name: '손그림 로고 키링', count: 60, hideCount: false, total: 60 },
-            { id: 'F', name: '포토카드 (1종)', count: 300, hideCount: true, total: 300 },
-            { id: 'G', name: '티저 엽서', count: 600, hideCount: true, total: 600 }
+        // 상품 구성 및 명칭 변경 적용
+        // A상 500회 제한 / B~D상 구간별 분산 로직 포함
+        const PRIZE_CONFIG = [
+            { id: 'A', name: '바지', count: 1, hideCount: false, limitPerQuart: [0, 0, 1, 1] }, 
+            { id: 'B', name: '반다나', count: 9, hideCount: false, limitPerQuart: [2, 5, 7, 9] }, 
+            { id: 'C', name: '사인폴라로이드', count: 15, hideCount: false, limitPerQuart: [4, 8, 12, 15] },
+            { id: 'D', name: '사인앨범', count: 15, hideCount: false, limitPerQuart: [4, 8, 12, 15] },
+            { id: 'E', name: '손그림 로고 키링', count: 60, hideCount: false },
+            { id: 'F', name: '포토카드', count: 300, hideCount: true }, // 명칭 변경
+            { id: 'G', name: '엽서', count: 600, hideCount: true }     // 명칭 변경
         ];
 
-        let items = [];
-        let currentDrawCount = 1;
+        let state = [];
+        let drawQty = 1;
 
-        function loadData() {
-            const saved = localStorage.getItem('luckyDrawData_v2');
+        function init() {
+            const saved = localStorage.getItem('lucky_v5');
             if (saved) {
-                items = JSON.parse(saved);
+                state = JSON.parse(saved);
             } else {
-                items = JSON.parse(JSON.stringify(DEFAULT_ITEMS));
-                saveData();
+                state = JSON.parse(JSON.stringify(PRIZE_CONFIG));
+                save();
             }
+            render();
         }
 
-        function saveData() {
-            localStorage.setItem('luckyDrawData_v2', JSON.stringify(items));
-        }
+        function save() { localStorage.setItem('lucky_v5', JSON.stringify(state)); }
 
-        function resetData() {
-            if(confirm("모든 데이터를 1,000개로 리셋할까요?")) {
-                localStorage.removeItem('luckyDrawData_v2');
+        function fullReset() {
+            if(confirm("모든 데이터를 초기화하시겠습니까?")) {
+                localStorage.removeItem('lucky_v5');
                 location.reload();
             }
         }
 
-        function setDrawCount(num) {
-            currentDrawCount = num;
-            document.querySelectorAll('.draw-qty-btn').forEach(btn => {
-                btn.classList.replace('bg-black', 'bg-white');
-                btn.classList.replace('text-white', 'text-black');
-            });
-            const selectedBtn = document.getElementById(`btn-${num}`);
-            selectedBtn.classList.replace('bg-white', 'bg-black');
-            selectedBtn.classList.replace('text-black', 'text-white');
-            document.getElementById('btn-text').innerText = `${num}개 뽑기`;
+        function toggleAdminTab() {
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('hidden');
         }
 
-        function toggleAdminTab() {
-            document.getElementById('admin-tab').classList.toggle('hidden-tab');
+        function changeQty(n) {
+            drawQty = n;
+            document.querySelectorAll('.qty-btn').forEach(btn => btn.classList.remove('bg-white', 'text-black'));
+            document.getElementById(`qty-${n}`).classList.add('bg-white', 'text-black');
+            document.getElementById('draw-btn-label').innerText = `${n}개 뽑기`;
         }
 
         function render() {
-            const guestContainer = document.getElementById('guest-inventory');
-            const adminContainer = document.getElementById('admin-inventory');
-            const historyCount = 1000 - items.reduce((s, i) => s + i.count, 0);
-            
-            document.getElementById('total-draw-info').innerText = `TOTAL: ${historyCount}/1000`;
+            const prizeContainer = document.getElementById('prizes-status');
+            const adminContainer = document.getElementById('admin-details');
+            const historyCount = 1000 - state.reduce((acc, cur) => acc + cur.count, 0);
 
-            guestContainer.innerHTML = items.map(item => {
-                const isSoldOut = item.count === 0;
-                let label = item.hideCount ? (isSoldOut ? "소진" : "재고 있음") : (isSoldOut ? "소진" : `${item.count}개`);
+            prizeContainer.innerHTML = state.map(item => {
+                const out = item.count === 0;
+                let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
                 return `
-                    <div class="flex justify-between items-center ${isSoldOut ? 'opacity-30' : 'text-zinc-800'}">
-                        <span class="font-bold text-sm">${item.id}. ${item.name}</span>
-                        <span class="text-xs font-black ${item.hideCount && !isSoldOut ? 'text-blue-600' : 'text-zinc-400'}">${label}</span>
+                    <div class="flex justify-between items-center ${out ? 'opacity-20' : ''}">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] text-zinc-500 font-bold uppercase">${item.id} PRIZE</span>
+                            <span class="font-bold text-lg">${item.name}</span>
+                        </div>
+                        <span class="text-xs font-black ${item.hideCount && !out ? 'text-blue-400' : 'text-zinc-400'}">${statusText}</span>
                     </div>
                 `;
             }).join('');
 
-            adminContainer.innerHTML = items.map(item => `
+            adminContainer.innerHTML = `
+                <div class="mb-4 text-blue-400 font-bold italic">누적 참여 횟수: ${historyCount}회</div>
+            ` + state.map(item => `
                 <div class="flex justify-between border-b border-white/5 pb-1">
-                    <span>${item.id}. ${item.name}</span>
-                    <span>${item.count} / ${item.total}</span>
+                    <span>${item.id} - ${item.name}</span>
+                    <span>${item.count} EA</span>
                 </div>
             `).join('');
         }
 
-        async function startDraw() {
-            const btn = document.getElementById('main-btn');
-            const resultsList = document.getElementById('results-list');
-            const statusText = document.getElementById('status-text');
+        async function executeDraw() {
+            const btn = document.getElementById('draw-button');
+            const wrapper = document.getElementById('results-wrapper');
+            const intro = document.getElementById('intro-text');
             
-            let totalAvailable = items.reduce((s, i) => s + i.count, 0);
-            if (totalAvailable < currentDrawCount) {
-                alert(`남은 상품이 ${totalAvailable}개뿐입니다.`);
-                return;
-            }
+            const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
+            if (totalRemaining < drawQty) { alert("잔여 수량이 부족합니다."); return; }
 
             btn.disabled = true;
-            statusText.classList.add('hidden');
-            resultsList.innerHTML = "";
+            intro.classList.add('hidden');
+            wrapper.innerHTML = "";
 
-            for (let i = 0; i < currentDrawCount; i++) {
-                const historyCount = 1000 - items.reduce((s, item) => s + item.count, 0);
-                
-                // A상 500회 제한 로직
-                const pool = items.filter(item => {
-                    if (item.id === 'A' && historyCount < 500) return false;
-                    return item.count > 0;
+            for (let i = 0; i < drawQty; i++) {
+                const historyCount = 1000 - state.reduce((acc, cur) => acc + cur.count, 0);
+                const currentQuart = Math.floor(historyCount / 250);
+
+                const pool = state.filter(item => {
+                    if (item.count <= 0) return false;
+                    if (item.limitPerQuart) {
+                        const maxAllowed = item.limitPerQuart[currentQuart];
+                        const drawnSoFar = PRIZE_CONFIG.find(p => p.id === item.id).count - item.count;
+                        if (drawnSoFar >= maxAllowed) return false;
+                    }
+                    return true;
                 });
 
-                const poolTotal = pool.reduce((s, item) => s + item.count, 0);
-                let random = Math.floor(Math.random() * poolTotal);
-                let currentSum = 0;
-                let selected = null;
+                const fallbackPool = pool.length > 0 ? pool : state.filter(item => item.count > 0 && !item.limitPerQuart);
 
-                for (let item of pool) {
-                    currentSum += item.count;
-                    if (random < currentSum) {
-                        selected = item;
-                        items.find(orig => orig.id === item.id).count--;
+                const poolTotal = fallbackPool.reduce((acc, cur) => acc + cur.count, 0);
+                let rand = Math.floor(Math.random() * poolTotal);
+                let acc = 0;
+                let picked = null;
+
+                for (let target of fallbackPool) {
+                    acc += target.count;
+                    if (rand < acc) {
+                        picked = target;
+                        state.find(orig => orig.id === target.id).count--;
                         break;
                     }
                 }
 
-                const resultDiv = document.createElement('div');
-                resultDiv.className = "result-item bg-black text-white p-3 rounded-xl flex justify-between items-center shadow-lg";
-                resultDiv.innerHTML = `
-                    <span class="text-xs font-bold opacity-50">${selected.id}등급</span>
-                    <span class="font-black text-lg">${selected.name}</span>
-                    <span class="text-[10px] border border-white/30 px-2 py-0.5 rounded">WIN</span>
+                const card = document.createElement('div');
+                card.className = "result-card p-4 rounded-2xl flex justify-between items-center shadow-xl mb-2";
+                card.innerHTML = `
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold opacity-40 uppercase">${picked.id} RANK</span>
+                        <span class="text-xl font-black">${picked.name}</span>
+                    </div>
+                    <div class="bg-black text-white text-[10px] px-3 py-1 rounded-full font-bold">당첨</div>
                 `;
-                resultsList.appendChild(resultDiv);
+                wrapper.appendChild(card);
+                document.getElementById('display-container').scrollTop = document.getElementById('display-container').scrollHeight;
                 
-                // 다중 추첨 시 리스트 아래로 스크롤
-                document.getElementById('status-area').scrollTop = document.getElementById('status-area').scrollHeight;
-                
-                saveData();
+                save();
                 render();
-                await new Promise(r => setTimeout(r, 200)); // 순차적 노출 효과
+                await new Promise(r => setTimeout(r, 150));
             }
             btn.disabled = false;
         }
 
-        loadData();
-        render();
+        init();
     </script>
 </body>
 </html>
