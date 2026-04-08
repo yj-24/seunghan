@@ -8,14 +8,24 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@700;900&display=swap');
         body { font-family: 'Pretendard', sans-serif; touch-action: manipulation; user-select: none; background-color: #ffffff; min-height: 100vh; color: #000000; padding-bottom: 250px; overflow-x: hidden; }
+        
         .main-card { background: #ffffff; border: 2px solid #000000; border-radius: 2.5rem; box-shadow: 10px 10px 0px #000000; }
+        
+        /* 인벤토리 섹션 구조 */
         .inventory-section { background: #ffffff; border: 2px solid #000000; border-bottom: none; border-radius: 2.5rem 2.5rem 0 0; width: 100%; padding: 2.5rem 1.8rem; overflow: visible !important; display: block !important; }
         .inventory-base { background: #000000; height: 12px; width: 100%; border-radius: 0 0 2.5rem 2.5rem; margin-top: -2px; margin-bottom: 50px; }
+        
         .prize-row { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 0; border-bottom: 1px solid #f0f0f0; }
         .prize-row:last-child { border-bottom: none; }
+        
         .result-card { background: #f3f4f6; color: black; border: 1px solid #000000; animation: slideIn 0.3s ease-out forwards; border-radius: 1.2rem; }
         .summary-badge { background: #000000; color: #ffffff; border-radius: 99px; }
         .glow-highlight { color: #f8ff00; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+        
+        .history-item { border: 1px solid #e5e7eb; border-radius: 1rem; margin-bottom: 0.75rem; padding: 1rem; background: #fafafa; }
+        .history-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin: 2px; background: #e5e7eb; color: #6b7280; }
+        .tag-special { background: #f8ff00; color: #000; border: 1px solid #000; }
+
         @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -23,16 +33,19 @@
 </head>
 <body class="py-10 px-6">
     <div class="max-w-md mx-auto relative">
+        <!-- 타이틀 -->
         <div class="flex justify-between items-start mb-10">
             <div class="flex flex-col text-left">
                 <h1 class="text-3xl font-black tracking-tighter leading-none">XngHan&Xoul<br><span class="text-4xl italic glow-highlight">Glow</span></h1>
             </div>
+            <!-- 관리자 버튼 -->
             <button onclick="toggleAdminTab()" class="w-12 h-12 rounded-full border border-zinc-200 text-zinc-300 font-bold text-[10px] flex items-center justify-center">AD</button>
         </div>
 
+        <!-- 드로우 카드 -->
         <div class="main-card p-8 mb-12 text-center relative z-10">
-            <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2 text-black">
-                <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg italic">Touch to Start</div>
+            <div id="display-container" class="h-80 flex flex-col items-center justify-start mb-6 overflow-y-auto no-scrollbar pt-2 text-black text-left">
+                <div id="intro-text" class="my-auto text-zinc-400 font-medium text-lg italic text-center w-full">Touch to Start</div>
                 <div id="summary-area" class="w-full mb-6 flex flex-wrap justify-center gap-2 hidden"></div>
                 <div id="results-wrapper" class="w-full space-y-2.5"></div>
             </div>
@@ -46,21 +59,43 @@
 
             <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all tracking-widest mb-4">GLOW♡</button>
             
+            <!-- 취소 버튼 -->
             <button id="undo-button" onclick="undoLastDraw()" class="text-[10px] font-bold text-zinc-300 uppercase tracking-widest hidden">실수하셨나요? 방금 뽑기 취소하기 ↩</button>
         </div>
 
+        <!-- 인벤토리 현황판 -->
         <div class="inventory-section">
             <h2 class="text-[11px] font-bold mb-4 opacity-40 tracking-[0.2em] uppercase italic text-left text-black">PRIZE INVENTORY</h2>
-            <div id="prizes-status" class="flex flex-col prizes-container text-black"></div>
+            <div id="prizes-status" class="flex flex-col text-black"></div>
         </div>
         <div class="inventory-base"></div>
 
+        <!-- 관리자 패널 (로그 및 상세 통계) -->
         <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
-                <h2 class="font-black text-2xl italic tracking-tighter text-black">ADMIN</h2>
+                <h2 class="font-black text-2xl italic tracking-tighter text-black uppercase">Admin Dashboard</h2>
                 <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm text-black">CLOSE</button>
             </div>
+
+            <!-- 상단 요약 통계 -->
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50">
+                    <p class="text-[10px] font-bold opacity-50 uppercase">총 드로우 횟수</p>
+                    <p id="stat-total" class="text-3xl font-black text-black">0</p>
+                </div>
+                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50">
+                    <p class="text-[10px] font-bold opacity-50 uppercase">전체 남은 수량</p>
+                    <p id="stat-remain" class="text-3xl font-black text-black">0</p>
+                </div>
+            </div>
+
+            <!-- 상품별 상세 통계 바 -->
+            <div id="admin-prize-stats" class="space-y-3 mb-10"></div>
+
+            <!-- 상세 히스토리 로그 -->
+            <h3 class="font-black mb-4 text-lg text-black uppercase tracking-tight">Detailed History Logs</h3>
             <div id="history-log-list" class="space-y-4"></div>
+
             <button onclick="fullReset()" class="w-full mt-10 py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl font-bold uppercase text-xs">System Factory Reset</button>
         </div>
     </div>
@@ -81,22 +116,27 @@
         let drawQty = 1;
 
         function init() {
-            const savedState = localStorage.getItem('glow_v22_state');
-            const savedLogs = localStorage.getItem('glow_v22_logs');
+            // 데이터 키를 고정하여 버전 충돌 방지
+            const savedState = localStorage.getItem('glow_final_v23_state');
+            const savedLogs = localStorage.getItem('glow_final_v23_logs');
+            
             if (savedState) { state = JSON.parse(savedState); } 
             else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
+            
             if (savedLogs) { sessionLogs = JSON.parse(savedLogs); }
+            
             render();
         }
 
         function save() {
-            localStorage.setItem('glow_v22_state', JSON.stringify(state));
-            localStorage.setItem('glow_v22_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_final_v23_state', JSON.stringify(state));
+            localStorage.setItem('glow_final_v23_logs', JSON.stringify(sessionLogs));
         }
 
         function toggleAdminTab() {
-            document.getElementById('admin-panel').classList.toggle('hidden');
-            if(!document.getElementById('admin-panel').classList.contains('hidden')) renderHistory();
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('hidden');
+            if(!panel.classList.contains('hidden')) renderHistory();
         }
 
         function changeQty(n) {
@@ -109,7 +149,7 @@
         }
 
         function render() {
-            const prizeContainer = document.querySelector('.prizes-container');
+            const prizeContainer = document.getElementById('prizes-status');
             prizeContainer.innerHTML = state.map(item => {
                 const out = item.count === 0;
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
@@ -117,48 +157,89 @@
             }).join('');
         }
 
-        // [핵심] 취소 기능 함수
+        function renderHistory() {
+            const totalDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
+            const totalRemaining = state.reduce((acc, s) => acc + s.count, 0);
+            
+            document.getElementById('stat-total').innerText = totalDrawn;
+            document.getElementById('stat-remain').innerText = totalRemaining;
+
+            // 관리자 패널 내 상품별 바 그래프 통계
+            const statsContainer = document.getElementById('admin-prize-stats');
+            statsContainer.innerHTML = state.map(item => {
+                const initial = PRIZE_CONFIG.find(p => p.id === item.id).count;
+                const drawn = initial - item.count;
+                const percent = ((drawn / initial) * 100).toFixed(1);
+                return `
+                    <div class="flex flex-col gap-1">
+                        <div class="flex justify-between text-[11px] font-bold">
+                            <span>${item.name}</span>
+                            <span class="opacity-50">${drawn} / ${initial} EA (${percent}%)</span>
+                        </div>
+                        <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-black transition-all duration-500" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // 관리자 패널 내 상세 로그 리스트
+            const logList = document.getElementById('history-log-list');
+            if (sessionLogs.length === 0) {
+                logList.innerHTML = `<div class="text-zinc-300 italic text-sm py-10">데이터가 없습니다.</div>`;
+            } else {
+                logList.innerHTML = sessionLogs.slice().reverse().map(session => `
+                    <div class="history-item">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold opacity-40 uppercase tracking-widest">${session.time}</span>
+                            <span class="text-[10px] font-black bg-zinc-200 px-2 py-0.5 rounded">${session.items.length}개</span>
+                        </div>
+                        <div class="flex flex-wrap">${session.items.map(i => `<span class="history-tag ${['A','B','C','D'].includes(i.grade) ? 'tag-special' : ''}">${i.name}</span>`).join('')}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
         function undoLastDraw() {
             if (sessionLogs.length === 0) return;
-            if (!confirm("방금 진행한 뽑기를 취소하고 재고를 복구할까요?")) return;
+            if (!confirm("방금 진행한 뽑기 내역을 삭제하고 재고를 다시 채울까요?")) return;
 
-            const lastSession = sessionLogs.pop(); // 마지막 로그 꺼내기
+            const lastSession = sessionLogs.pop();
             lastSession.items.forEach(pickedItem => {
                 const target = state.find(s => s.id === pickedItem.grade);
-                if (target) target.count++; // 재고 복구
+                if (target) target.count++;
             });
 
             save();
             render();
             
-            // 화면 초기화
             document.getElementById('results-wrapper').innerHTML = "";
             document.getElementById('summary-area').innerHTML = "";
             document.getElementById('summary-area').classList.add('hidden');
             document.getElementById('intro-text').classList.remove('hidden');
             document.getElementById('undo-button').classList.add('hidden');
             
-            alert("취소되었습니다. 재고가 정상 복구되었습니다.");
+            alert("정상적으로 취소 및 복구되었습니다.");
         }
 
         async function executeDraw() {
             const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
-            if (totalRemaining < drawQty) { alert("Stock Out!"); return; }
+            if (totalRemaining < drawQty) { alert("잔여 수량이 부족합니다."); return; }
             
             document.getElementById('draw-button').disabled = true;
-            document.getElementById('undo-button').classList.add('hidden'); // 드로우 시작시 취소버튼 숨김
+            document.getElementById('undo-button').classList.add('hidden');
             document.getElementById('intro-text').classList.add('hidden');
             document.getElementById('summary-area').classList.add('hidden');
-            document.getElementById('summary-area').innerHTML = "";
             document.getElementById('results-wrapper').innerHTML = "";
 
             let pickedItems = [];
             const now = new Date();
-            const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+            const timeStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
             for (let i = 0; i < drawQty; i++) {
-                const drawnSoFar = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
-                const currentQuart = Math.floor(drawnSoFar / 250);
+                const drawnSoFarCount = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
+                const currentQuart = Math.floor(drawnSoFarCount / 250);
+                
                 const pool = state.filter(item => {
                     if (item.count <= 0) return false;
                     if (item.limitPerQuart) {
@@ -168,6 +249,7 @@
                     }
                     return true;
                 });
+
                 const fallback = pool.length > 0 ? pool : state.filter(item => item.count > 0 && !item.limitPerQuart);
                 const total = fallback.reduce((acc, cur) => acc + cur.count, 0);
                 let rand = Math.floor(Math.random() * total);
@@ -195,8 +277,16 @@
             });
             
             document.getElementById('draw-button').disabled = false;
-            document.getElementById('undo-button').classList.remove('hidden'); // 드로우 완료 후 취소버튼 노출
+            document.getElementById('undo-button').classList.remove('hidden');
         }
+
+        function fullReset() {
+            if(confirm("모든 데이터를 초기화하시겠습니까? 복구할 수 없습니다.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
         init();
     </script>
 </body>
