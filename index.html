@@ -24,17 +24,7 @@
         @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
-
-        /* [추가] 컨페티 효과 스타일 */
-        #confetti-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1000; /* 모든 요소 위에 표시 */
-        }
+        #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
     </style>
 </head>
 <body class="py-10 px-6">
@@ -56,10 +46,10 @@
             </div>
             
             <div class="flex gap-3 justify-center mb-8">
-                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-black text-white transition-all text-sm">1</button>
-                <button onclick="changeQty(3)" id="qty-3" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all text-sm">3</button>
-                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all text-sm">5</button>
-                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black transition-all text-sm">10</button>
+                <button onclick="changeQty(1)" id="qty-1" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-black text-white text-sm transition-all">1</button>
+                <button onclick="changeQty(3)" id="qty-3" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black text-sm transition-all">3</button>
+                <button onclick="changeQty(5)" id="qty-5" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black text-sm transition-all">5</button>
+                <button onclick="changeQty(10)" id="qty-10" class="qty-btn w-12 h-12 rounded-xl border-2 border-black font-bold bg-white text-black text-sm transition-all">10</button>
             </div>
 
             <button id="draw-button" onclick="executeDraw()" class="w-full py-6 bg-black text-white rounded-3xl text-2xl font-black active:scale-95 transition-all tracking-widest mb-4 uppercase">GLOW♡</button>
@@ -72,12 +62,32 @@
         </div>
         <div class="inventory-base"></div>
 
+        <!-- 관리자 패널 -->
         <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
-                <h2 class="font-black text-2xl italic tracking-tighter text-blackuppercase">Admin Dashboard</h2>
+                <h2 class="font-black text-2xl italic tracking-tighter text-black uppercase">Admin Dashboard</h2>
                 <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm text-black">CLOSE</button>
             </div>
+
+            <!-- [복구] TOTAL 통계 요약 영역 -->
+            <div class="grid grid-cols-2 gap-4 mb-8 text-black">
+                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center">
+                    <p class="text-[10px] font-bold opacity-50 uppercase">Total Draws</p>
+                    <p id="stat-total" class="text-3xl font-black">0</p>
+                </div>
+                <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center">
+                    <p class="text-[10px] font-bold opacity-50 uppercase">Stock Left</p>
+                    <p id="stat-remain" class="text-3xl font-black">0</p>
+                </div>
+            </div>
+
+            <!-- 상품별 통계 바 -->
+            <div id="admin-prize-stats" class="space-y-3 mb-10 text-black"></div>
+
+            <!-- 상세 히스토리 -->
+            <h3 class="font-black mb-4 text-lg text-black uppercase">Detailed History</h3>
             <div id="history-log-list" class="space-y-4"></div>
+
             <button onclick="fullReset()" class="w-full mt-10 py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl font-bold uppercase text-xs">System Factory Reset</button>
         </div>
     </div>
@@ -97,97 +107,24 @@
         let sessionLogs = [];
         let drawQty = 1;
 
-        // [추가] 컨페티 애니메이션 엔진
+        // 컨페티 엔진
         const confetti = {
-            canvas: null,
-            ctx: null,
-            particles: [],
-            colors: ['#f8ff00', '#000000', '#ffffff', '#f3f4f6'], // 컨페티 색상 (노랑, 검정, 흰색, 회색)
-            isAnimationRunning: false,
-            animationTimeout: null,
-
-            init: function() {
-                this.canvas = document.getElementById('confetti-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.resize();
-                window.addEventListener('resize', () => this.resize());
-            },
-
-            resize: function() {
-                this.canvas.width = window.innerWidth;
-                this.canvas.height = window.innerHeight;
-            },
-
-            createParticle: function() {
-                const x = Math.random() * this.canvas.width;
-                const y = Math.random() * this.canvas.height - this.canvas.height; // 화면 위에서 시작
-                const size = Math.random() * 8 + 4;
-                const color = this.colors[Math.floor(Math.random() * this.colors.length)];
-                const speedY = Math.random() * 5 + 3;
-                const speedX = Math.random() * 2 - 1;
-                const rotation = Math.random() * Math.PI * 2;
-                const rotationSpeed = Math.random() * 0.2 - 0.1;
-
-                return { x, y, size, color, speedY, speedX, rotation, rotationSpeed };
-            },
-
-            start: function() {
-                if (this.isAnimationRunning) return;
-                this.isAnimationRunning = true;
-                this.particles = [];
-                for (let i = 0; i < 150; i++) { // 컨페티 개수
-                    this.particles.push(this.createParticle());
-                }
-                this.animate();
-
-                // 3초 후 애니메이션 중지
-                clearTimeout(this.animationTimeout);
-                this.animationTimeout = setTimeout(() => {
-                    this.stop();
-                }, 3000);
-            },
-
-            stop: function() {
-                this.isAnimationRunning = false;
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-            },
-
-            animate: function() {
-                if (!this.isAnimationRunning) return;
-                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-                for (let i = 0; i < this.particles.length; i++) {
-                    const p = this.particles[i];
-                    p.y += p.speedY;
-                    p.x += p.speedX;
-                    p.rotation += p.rotationSpeed;
-
-                    this.ctx.save();
-                    this.ctx.translate(p.x + p.size / 2, p.y + p.size / 2);
-                    this.ctx.rotate(p.rotation);
-                    this.ctx.fillStyle = p.color;
-                    this.ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
-                    this.ctx.restore();
-
-                    // 화면 아래로 나가면 위로 재배치 (애니메이션 지속 시간 동안만)
-                    if (p.y > this.canvas.height && this.isAnimationRunning) {
-                        p.y = -p.size;
-                        p.x = Math.random() * this.canvas.width;
-                    }
-                }
-
-                requestAnimationFrame(() => this.animate());
-            }
+            canvas: null, ctx: null, particles: [], colors: ['#f8ff00', '#000000', '#ffffff'], isRunning: false,
+            init: function() { this.canvas = document.getElementById('confetti-canvas'); this.ctx = this.canvas.getContext('2d'); this.resize(); window.addEventListener('resize', () => this.resize()); },
+            resize: function() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
+            createParticle: function() { return { x: Math.random() * this.canvas.width, y: -20, size: Math.random() * 8 + 4, color: this.colors[Math.floor(Math.random() * this.colors.length)], speedY: Math.random() * 5 + 3, speedX: Math.random() * 2 - 1, rot: Math.random() * 6, rotS: Math.random() * 0.2 - 0.1 }; },
+            start: function() { if (this.isRunning) return; this.isRunning = true; this.particles = Array.from({length:150}, () => this.createParticle()); this.animate(); setTimeout(() => this.stop(), 3000); },
+            stop: function() { this.isRunning = false; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); },
+            animate: function() { if (!this.isRunning) return; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); this.particles.forEach(p => { p.y += p.speedY; p.x += p.speedX; p.rot += p.rotS; this.ctx.save(); this.ctx.translate(p.x, p.y); this.ctx.rotate(p.rot); this.ctx.fillStyle = p.color; this.ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size); this.ctx.restore(); if (p.y > this.canvas.height) p.y = -20; }); requestAnimationFrame(() => this.animate()); }
         };
 
         function init() {
             const savedState = localStorage.getItem('glow_final_v800_state');
             const savedLogs = localStorage.getItem('glow_final_v800_logs');
-            if (savedState) { state = JSON.parse(savedState); } 
+            if (savedState) state = JSON.parse(savedState);
             else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
-            if (savedLogs) { sessionLogs = JSON.parse(savedLogs); }
-            
-            confetti.init(); // [추가] 컨페티 초기화
+            if (savedLogs) sessionLogs = JSON.parse(savedLogs);
+            confetti.init();
             render();
         }
 
@@ -220,19 +157,36 @@
             }).join('');
         }
 
+        // [수정] 어드민 히스토리 및 통계 렌더링 함수
         function renderHistory() {
             const totalDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
-            const statsContainer = document.getElementById('history-log-list');
+            const totalRemaining = state.reduce((acc, s) => acc + s.count, 0);
             
-            // 단순 통계 표시
-            statsContainer.innerHTML = `<div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-black mb-6"><p class="text-[10px] font-bold opacity-50 uppercase">총 드로우 횟수</p><p class="text-3xl font-black">${totalDrawn}</p></div>`;
+            // 상단 뱃지 숫자 업데이트
+            document.getElementById('stat-total').innerText = totalDrawn;
+            document.getElementById('stat-remain').innerText = totalRemaining;
+
+            // 상품별 통계 바
+            const statsContainer = document.getElementById('admin-prize-stats');
+            statsContainer.innerHTML = state.map(item => {
+                const initial = PRIZE_CONFIG.find(p => p.id === item.id).count;
+                const drawn = initial - item.count;
+                const percent = ((drawn / initial) * 100).toFixed(1);
+                return `
+                    <div class="flex flex-col gap-1 text-black">
+                        <div class="flex justify-between text-[11px] font-bold"><span>${item.name}</span><span class="opacity-50">${drawn} / ${initial} EA</span></div>
+                        <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full bg-black" style="width: ${percent}%"></div></div>
+                    </div>
+                `;
+            }).join('');
 
             // 상세 로그
+            const logList = document.getElementById('history-log-list');
             if (sessionLogs.length === 0) {
-                statsContainer.innerHTML += `<div class="text-zinc-300 italic text-sm py-10">데이터가 없습니다.</div>`;
+                logList.innerHTML = `<div class="text-zinc-300 italic text-sm py-10">데이터가 없습니다.</div>`;
             } else {
-                statsContainer.innerHTML += sessionLogs.slice().reverse().map(session => `
-                    <div class="history-item text-black p-4 border border-zinc-100 rounded-xl mb-2">
+                logList.innerHTML = sessionLogs.slice().reverse().map(session => `
+                    <div class="history-item text-black">
                         <div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold opacity-40 uppercase tracking-widest">${session.time}</span><span class="text-[10px] font-black bg-zinc-200 px-2 py-0.5 rounded">${session.items.length}개</span></div>
                         <div class="flex flex-wrap">${session.items.map(i => `<span class="history-tag ${['A','B','C','D'].includes(i.grade) ? 'tag-special' : ''}">${i.name}</span>`).join('')}</div>
                     </div>
@@ -259,24 +213,21 @@
         async function executeDraw() {
             const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
             if (totalRemaining < drawQty) { alert("Stock Out!"); return; }
-            
             document.getElementById('draw-button').disabled = true;
             document.getElementById('undo-button').classList.add('hidden');
             document.getElementById('intro-text').classList.add('hidden');
-            
             document.getElementById('results-wrapper').innerHTML = "";
             document.getElementById('summary-area').innerHTML = "";
             document.getElementById('summary-area').classList.add('hidden');
 
             let pickedItems = [];
-            let hasSpecialPrize = false; // [추가] A상 당첨 여부 플래그
+            let hasA = false;
             const now = new Date();
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
             for (let i = 0; i < drawQty; i++) {
-                const drawnSoFarCount = sessionLogs.reduce((acc, s) => acc + s.items.length, 0) + pickedItems.length;
-                const currentQuart = Math.floor(drawnSoFarCount / 200);
-                
+                const drawnSoFar = sessionLogs.reduce((acc, s) => acc + s.items.length, 0) + pickedItems.length;
+                const currentQuart = Math.floor(drawnSoFar / 200);
                 const pool = state.filter(item => {
                     if (item.count <= 0) return false;
                     if (item.limitPerQuart) {
@@ -286,34 +237,24 @@
                     }
                     return true;
                 });
-
                 const fallback = pool.length > 0 ? pool : state.filter(item => item.count > 0 && !item.limitPerQuart);
                 const total = fallback.reduce((acc, cur) => acc + cur.count, 0);
                 let rand = Math.floor(Math.random() * total);
                 let acc = 0; let picked = null;
                 for (let t of fallback) { acc += t.count; if (rand < acc) { picked = t; state.find(o => o.id === t.id).count--; break; } }
-                
                 pickedItems.push({ name: picked.name, grade: picked.id });
-                
-                if (picked.id === 'A') hasSpecialPrize = true; // [추가] A상 당첨 확인
+                if (picked.id === 'A') hasA = true;
 
-                const isSpecialGrade = ['A','B','C','D'].includes(picked.id);
-                const cardClass = isSpecialGrade ? 'card-special' : 'card-normal';
-                const winBgClass = isSpecialGrade ? 'bg-black text-[#f8ff00]' : 'bg-black text-white';
-
+                const isSpecial = ['A','B','C','D'].includes(picked.id);
                 const card = document.createElement('div');
-                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${cardClass}`;
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecialGrade ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${winBgClass}">Win</div>`;
+                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${isSpecial ? 'card-special' : 'card-normal'}`;
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecial ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${isSpecial ? 'bg-black text-[#f8ff00]' : 'bg-black text-white'}">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 100));
             }
 
-            // [추가] A상 당첨 시 컨페티 효과 실행
-            if (hasSpecialPrize) {
-                confetti.start();
-            }
-
+            if (hasA) confetti.start();
             sessionLogs.push({ time: timeStr, items: pickedItems });
             save();
             const summary = pickedItems.reduce((acc, cur) => { acc[cur.name] = (acc[cur.name] || 0) + 1; return acc; }, {});
@@ -326,10 +267,7 @@
             document.getElementById('undo-button').classList.remove('hidden');
         }
 
-        function fullReset() {
-            if(confirm("Factory Reset?")) { localStorage.clear(); location.reload(); }
-        }
-
+        function fullReset() { if(confirm("Factory Reset?")) { localStorage.clear(); location.reload(); } }
         init();
     </script>
 </body>
