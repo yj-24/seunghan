@@ -80,11 +80,8 @@
     </div>
 
     <script>
-        // [수정] 상품 개수 및 균등 분배 로직 (전체 800회 기준)
         const PRIZE_CONFIG = [
-            // A상: 400회 이후에만 나오도록 설정 (1,2쿼터엔 0개, 3,4쿼터에 1개)
             { id: 'A', name: '바지', count: 1, limitPerQuart: [0, 0, 1, 1] }, 
-            // B, C, D상: 800회 내내 균등 분배 (쿼터당 약 25%, 25%, 25%, 25% 비율)
             { id: 'B', name: '반다나', count: 9, limitPerQuart: [2, 5, 7, 9] }, 
             { id: 'C', name: '사인폴라로이드', count: 15, limitPerQuart: [4, 8, 12, 15] },
             { id: 'D', name: '사인앨범', count: 15, limitPerQuart: [4, 8, 12, 15] },
@@ -191,7 +188,6 @@
 
             for (let i = 0; i < drawQty; i++) {
                 const drawnSoFar = sessionLogs.reduce((acc, s) => acc + s.items.length, 0) + pickedItems.length;
-                // [로직 수정] 800개 기준 쿼터 계산 (쿼터당 200회)
                 const currentQuart = Math.floor(drawnSoFar / 200);
                 
                 const pool = state.filter(item => {
@@ -211,9 +207,14 @@
                 
                 pickedItems.push({ name: picked.name, grade: picked.id });
                 
+                // [수정] 상위 등급(A~D) 당첨 시 노란색 강조 로직 추가
+                const isSpecialGrade = ['A','B','C','D'].includes(picked.id);
+                const gradeClass = isSpecialGrade ? 'text-[#f8ff00]' : 'opacity-30';
+                const winBgClass = isSpecialGrade ? 'bg-[#f8ff00] text-black' : 'bg-black text-white';
+
                 const card = document.createElement('div');
                 card.className = "result-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-2 text-left text-black";
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold opacity-30 uppercase mb-1">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="bg-black text-white text-[9px] px-3 py-1 rounded-full font-bold uppercase">Win</div>`;
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${gradeClass}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${winBgClass}">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 100));
