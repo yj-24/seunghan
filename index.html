@@ -223,3 +223,19 @@
             save();
             const summary = pickedItems.reduce((acc, cur) => { acc[cur.name] = (acc[cur.name] || 0) + 1; return acc; }, {});
             document.getElementById('summary-area').classList.remove('hidden');
+            Object.entries(summary).forEach(([name, count]) => {
+                const b = document.createElement('div'); b.className = "summary-badge px-4 py-1.5 text-[11px] font-bold"; b.innerText = `${name} × ${count}`;
+                document.getElementById('summary-area').appendChild(b);
+            });
+            document.getElementById('draw-button').disabled = false;
+            document.getElementById('undo-button').classList.remove('hidden');
+        }
+
+        function fullReset() {
+            if(confirm("Factory Reset?")) { localStorage.clear(); location.reload(); }
+        }
+
+        init();
+    </script>
+</body>
+</html>
