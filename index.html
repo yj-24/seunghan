@@ -80,14 +80,17 @@
     </div>
 
     <script>
+        // [수정] 상품 개수 및 균등 분배 로직 (전체 800회 기준)
         const PRIZE_CONFIG = [
+            // A상: 400회 이후에만 나오도록 설정 (1,2쿼터엔 0개, 3,4쿼터에 1개)
             { id: 'A', name: '바지', count: 1, limitPerQuart: [0, 0, 1, 1] }, 
+            // B, C, D상: 800회 내내 균등 분배 (쿼터당 약 25%, 25%, 25%, 25% 비율)
             { id: 'B', name: '반다나', count: 9, limitPerQuart: [2, 5, 7, 9] }, 
             { id: 'C', name: '사인폴라로이드', count: 15, limitPerQuart: [4, 8, 12, 15] },
             { id: 'D', name: '사인앨범', count: 15, limitPerQuart: [4, 8, 12, 15] },
-            { id: 'E', name: '손그림 로고 키링', count: 60 },
+            { id: 'E', name: '손그림 로고 키링', count: 100 },
             { id: 'F', name: '포토카드', count: 300, hideCount: true },
-            { id: 'G', name: '엽서', count: 600, hideCount: true }
+            { id: 'G', name: '티저 엽서', count: 360, hideCount: true }
         ];
 
         let state = [];
@@ -95,8 +98,8 @@
         let drawQty = 1;
 
         function init() {
-            const savedState = localStorage.getItem('glow_final_v24_state');
-            const savedLogs = localStorage.getItem('glow_final_v24_logs');
+            const savedState = localStorage.getItem('glow_final_v800_state');
+            const savedLogs = localStorage.getItem('glow_final_v800_logs');
             if (savedState) { state = JSON.parse(savedState); } 
             else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
             if (savedLogs) { sessionLogs = JSON.parse(savedLogs); }
@@ -104,8 +107,8 @@
         }
 
         function save() {
-            localStorage.setItem('glow_final_v24_state', JSON.stringify(state));
-            localStorage.setItem('glow_final_v24_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_final_v800_state', JSON.stringify(state));
+            localStorage.setItem('glow_final_v800_logs', JSON.stringify(sessionLogs));
         }
 
         function toggleAdminTab() {
@@ -178,8 +181,6 @@
             document.getElementById('draw-button').disabled = true;
             document.getElementById('undo-button').classList.add('hidden');
             document.getElementById('intro-text').classList.add('hidden');
-            
-            // [중요 수정] 새로운 드로우 시작 시 이전 결과 리스트를 비웁니다.
             document.getElementById('results-wrapper').innerHTML = "";
             document.getElementById('summary-area').innerHTML = "";
             document.getElementById('summary-area').classList.add('hidden');
@@ -189,8 +190,10 @@
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
             for (let i = 0; i < drawQty; i++) {
-                const drawnSoFar = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
-                const currentQuart = Math.floor(drawnSoFar / 250);
+                const drawnSoFar = sessionLogs.reduce((acc, s) => acc + s.items.length, 0) + pickedItems.length;
+                // [로직 수정] 800개 기준 쿼터 계산 (쿼터당 200회)
+                const currentQuart = Math.floor(drawnSoFar / 200);
+                
                 const pool = state.filter(item => {
                     if (item.count <= 0) return false;
                     if (item.limitPerQuart) {
@@ -220,19 +223,3 @@
             save();
             const summary = pickedItems.reduce((acc, cur) => { acc[cur.name] = (acc[cur.name] || 0) + 1; return acc; }, {});
             document.getElementById('summary-area').classList.remove('hidden');
-            Object.entries(summary).forEach(([name, count]) => {
-                const b = document.createElement('div'); b.className = "summary-badge px-4 py-1.5 text-[11px] font-bold"; b.innerText = `${name} × ${count}`;
-                document.getElementById('summary-area').appendChild(b);
-            });
-            document.getElementById('draw-button').disabled = false;
-            document.getElementById('undo-button').classList.remove('hidden');
-        }
-
-        function fullReset() {
-            if(confirm("Factory Reset?")) { localStorage.clear(); location.reload(); }
-        }
-
-        init();
-    </script>
-</body>
-</html>
