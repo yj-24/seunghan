@@ -13,7 +13,13 @@
         .inventory-base { background: #000000; height: 12px; width: 100%; border-radius: 0 0 2.5rem 2.5rem; margin-top: -2px; margin-bottom: 50px; }
         .prize-row { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 0; border-bottom: 1px solid #f0f0f0; }
         .prize-row:last-child { border-bottom: none; }
-        .result-card { background: #f3f4f6; color: black; border: 1px solid #000000; animation: slideIn 0.3s ease-out forwards; border-radius: 1.2rem; }
+        
+        /* 기본 결과 카드 */
+        .result-card { border: 1px solid #000000; animation: slideIn 0.3s ease-out forwards; border-radius: 1.2rem; }
+        .card-normal { background: #f3f4f6; color: black; }
+        /* [수정] 상위 등급 전용 노란색 칸 스타일 */
+        .card-special { background: #f8ff00 !important; color: #000000 !important; border: 2px solid #000000; box-shadow: 4px 4px 0px #000000; }
+        
         .summary-badge { background: #000000; color: #ffffff; border-radius: 99px; }
         .glow-highlight { color: #f8ff00; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
         .history-item { border: 1px solid #e5e7eb; border-radius: 1rem; margin-bottom: 0.75rem; padding: 1rem; background: #fafafa; }
@@ -207,14 +213,14 @@
                 
                 pickedItems.push({ name: picked.name, grade: picked.id });
                 
-                // [수정] 상위 등급(A~D) 당첨 시 노란색 강조 로직 추가
+                // [수정] 상위 등급(A~D) 당첨 시 칸 전체를 노랗게 설정
                 const isSpecialGrade = ['A','B','C','D'].includes(picked.id);
-                const gradeClass = isSpecialGrade ? 'text-[#f8ff00]' : 'opacity-30';
-                const winBgClass = isSpecialGrade ? 'bg-[#f8ff00] text-black' : 'bg-black text-white';
+                const cardClass = isSpecialGrade ? 'card-special' : 'card-normal';
+                const winBgClass = isSpecialGrade ? 'bg-black text-[#f8ff00]' : 'bg-black text-white';
 
                 const card = document.createElement('div');
-                card.className = "result-card p-4 rounded-xl flex justify-between items-center shadow-sm mb-2 text-left text-black";
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${gradeClass}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${winBgClass}">Win</div>`;
+                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left ${cardClass}`;
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecialGrade ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${winBgClass}">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 100));
