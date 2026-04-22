@@ -63,14 +63,12 @@
         </div>
         <div class="inventory-base"></div>
 
-        <!-- 관리자 패널 -->
         <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
                 <h2 class="font-black text-2xl italic tracking-tighter text-black uppercase">Admin Dashboard</h2>
                 <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm text-black">CLOSE</button>
             </div>
 
-            <!-- [복구] 동기화 코드 영역 -->
             <div class="mb-10 p-6 border-2 border-dashed border-zinc-300 rounded-3xl bg-zinc-50">
                 <h3 class="font-black text-sm mb-2 text-black">Sync & Export (데이터 백업/복구)</h3>
                 <p class="text-[10px] opacity-60 mb-3">아래 코드를 복사하여 다른 기기에 붙여넣으면 재고와 로그가 동기화됩니다.</p>
@@ -94,7 +92,7 @@
             { id: 'D', name: '사인앨범', count: 15, limitPerQuart: [4, 8, 12, 15] },
             { id: 'E', name: '손그림 로고 키링', count: 100 },
             { id: 'F', name: '포토카드', count: 300, hideCount: true },
-            { id: 'G', name: '티저 엽서', count: 360, hideCount: true }
+            { id: 'G', name: '엽서 (4종 중 랜덤 1종)', count: 360, hideCount: true }
         ];
 
         let state = [];
@@ -125,20 +123,20 @@
         function save() {
             localStorage.setItem('glow_final_v800_state', JSON.stringify(state));
             localStorage.setItem('glow_final_v800_logs', JSON.stringify(sessionLogs));
-            updateSyncText(); // 저장할 때마다 텍스트 업데이트
+            updateSyncText();
         }
 
-        // [복구] 동기화 텍스트 업데이트 함수
         function updateSyncText() {
             const syncObj = { state, sessionLogs };
-            document.getElementById('sync-data').value = btoa(unescape(encodeURIComponent(JSON.stringify(syncObj))));
+            const syncDataArea = document.getElementById('sync-data');
+            if (syncDataArea) syncDataArea.value = btoa(unescape(encodeURIComponent(JSON.stringify(syncObj))));
         }
 
         function copySyncData() {
             const textArea = document.getElementById('sync-data');
             textArea.select();
             document.execCommand('copy');
-            alert("동기화 코드가 클립보드에 복사되었습니다. 안전한 곳에 붙여넣으세요.");
+            alert("동기화 코드가 복사되었습니다.");
         }
 
         function importSyncData() {
