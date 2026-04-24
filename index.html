@@ -11,8 +11,15 @@
         .main-card { background: #ffffff; border: 2px solid #000000; border-radius: 2.5rem; box-shadow: 10px 10px 0px #000000; position: relative; z-index: 10; }
         .inventory-section { background: #ffffff; border: 2px solid #000000; border-bottom: none; border-radius: 2.5rem 2.5rem 0 0; width: 100%; padding: 2.5rem 1.8rem; overflow: visible !important; display: block !important; }
         .inventory-base { background: #000000; height: 12px; width: 100%; border-radius: 0 0 2.5rem 2.5rem; margin-top: -2px; margin-bottom: 50px; }
-        .prize-row { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 0; border-bottom: 1px solid #f0f0f0; }
+        
+        /* [수정] 현황판 리스트 스타일 */
+        .prize-row { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1rem; border-bottom: 1px solid #f0f0f0; margin: 0 -0.5rem; }
         .prize-row:last-child { border-bottom: none; }
+        
+        /* [추가] 현황판 상위 등급 강조 스타일 */
+        .prize-row-special { background: #f8ff00; border-radius: 1rem; border: 1.5px solid #000000; margin-bottom: 0.5rem; box-shadow: 2px 2px 0px #000000; }
+        .prize-row-special span { color: #000000 !important; }
+
         .result-card { border: 1px solid #000000; animation: slideIn 0.3s ease-out forwards; border-radius: 1.2rem; }
         .card-normal { background: #f3f4f6; color: black; }
         .card-special { background: #f8ff00 !important; color: #000000 !important; border: 2px solid #000000; box-shadow: 4px 4px 0px #000000; }
@@ -26,21 +33,8 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
         
-        /* 입력창 디자인 커스텀 */
-        .qty-input {
-            width: 120px;
-            height: 60px;
-            border: 3px solid #000000;
-            border-radius: 1rem;
-            font-size: 1.5rem;
-            font-weight: 900;
-            text-align: center;
-            outline: none;
-            background: #ffffff;
-        }
-        .qty-input:focus {
-            background: #f8ff00;
-        }
+        .qty-input { width: 120px; height: 60px; border: 3px solid #000000; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; text-align: center; outline: none; background: #ffffff; }
+        .qty-input:focus { background: #f8ff00; }
     </style>
 </head>
 <body class="py-10 px-6">
@@ -134,23 +128,31 @@
             if(!panel.classList.contains('hidden')) renderHistory();
         }
 
-        // [추가] 버튼 라벨 실시간 업데이트
         function updateBtnLabel() {
             const qty = document.getElementById('buy-qty').value;
             const label = document.getElementById('draw-label');
-            if (qty < 1) {
-                label.innerText = `구매 수량을 입력하세요`;
-            } else {
-                label.innerText = `GLOW♡ (${qty})`;
-            }
+            label.innerText = qty < 1 ? `구매 수량을 입력하세요` : `GLOW♡ (${qty})`;
         }
 
         function render() {
             const prizeContainer = document.querySelector('.prizes-container');
             prizeContainer.innerHTML = state.map(item => {
                 const out = item.count === 0;
+                // [수정] A~D상 여부 확인하여 클래스 부여
+                const isSpecial = ['A','B','C','D'].includes(item.id);
+                const rowClass = isSpecial ? 'prize-row-special' : '';
+                const gradeLabelColor = isSpecial ? 'text-black opacity-60' : 'text-zinc-400';
+                
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
-                return `<div class="prize-row ${out ? 'opacity-20' : ''}"><div class="flex flex-col text-left"><span class="text-[9px] text-zinc-400 font-bold uppercase mb-1 tracking-wider">${item.id} GRADE</span><span class="font-bold text-lg leading-none text-black">${item.name}</span></div><span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span></div>`;
+                
+                return `
+                    <div class="prize-row ${rowClass} ${out ? 'opacity-20' : ''}">
+                        <div class="flex flex-col text-left">
+                            <span class="text-[9px] font-bold uppercase mb-1 tracking-wider ${gradeLabelColor}">${item.id} GRADE</span>
+                            <span class="font-bold text-lg leading-none text-black">${item.name}</span>
+                        </div>
+                        <span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span>
+                    </div>`;
             }).join('');
         }
 
@@ -195,7 +197,6 @@
         async function executeDraw() {
             const inputQty = document.getElementById('buy-qty').value;
             const drawQty = parseInt(inputQty);
-
             if (isNaN(drawQty) || drawQty < 1) { alert("1장 이상의 수량을 입력해주세요."); return; }
             const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
             if (totalRemaining < drawQty) { alert("잔여 수량이 부족합니다."); return; }
@@ -215,7 +216,6 @@
             for (let i = 0; i < drawQty; i++) {
                 const currentTotalDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0) + pickedItems.length;
                 const currentQuart = Math.floor(currentTotalDrawn / 200);
-                
                 const pool = state.filter(item => {
                     if (item.count <= 0) return false;
                     if (item.limitPerQuart) {
@@ -234,9 +234,12 @@
                 if (picked.id === 'A') hasA = true;
 
                 const isSpecial = ['A','B','C','D'].includes(picked.id);
+                const cardClass = isSpecial ? 'card-special' : 'card-normal';
+                const winBgClass = isSpecial ? 'bg-black text-[#f8ff00]' : 'bg-black text-white';
+
                 const card = document.createElement('div');
-                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${isSpecial ? 'card-special' : 'card-normal'}`;
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecial ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${isSpecial ? 'bg-black text-[#f8ff00]' : 'bg-black text-white'}">Win</div>`;
+                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${cardClass}`;
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecial ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${winBgClass}">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 80));
