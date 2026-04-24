@@ -12,18 +12,20 @@
         .inventory-section { background: #ffffff; border: 2px solid #000000; border-bottom: none; border-radius: 2.5rem 2.5rem 0 0; width: 100%; padding: 2.5rem 1.8rem; overflow: visible !important; display: block !important; }
         .inventory-base { background: #000000; height: 12px; width: 100%; border-radius: 0 0 2.5rem 2.5rem; margin-top: -2px; margin-bottom: 50px; }
         
-        /* [수정] 현황판 리스트 스타일 */
         .prize-row { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1rem; border-bottom: 1px solid #f0f0f0; margin: 0 -0.5rem; }
         .prize-row:last-child { border-bottom: none; }
-        
-        /* [추가] 현황판 상위 등급 강조 스타일 */
         .prize-row-special { background: #f8ff00; border-radius: 1rem; border: 1.5px solid #000000; margin-bottom: 0.5rem; box-shadow: 2px 2px 0px #000000; }
         .prize-row-special span { color: #000000 !important; }
 
         .result-card { border: 1px solid #000000; animation: slideIn 0.3s ease-out forwards; border-radius: 1.2rem; }
         .card-normal { background: #f3f4f6; color: black; }
         .card-special { background: #f8ff00 !important; color: #000000 !important; border: 2px solid #000000; box-shadow: 4px 4px 0px #000000; }
-        .summary-badge { background: #000000; color: #ffffff; border-radius: 99px; }
+        
+        /* [수정] 요약 배지 스타일 */
+        .summary-badge { border-radius: 99px; border: 1.5px solid #000; }
+        .summary-normal { background: #000000; color: #ffffff; }
+        .summary-special { background: #f8ff00; color: #000000; font-weight: 900; }
+
         .glow-highlight { color: #f8ff00; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
         .history-item { border: 1px solid #e5e7eb; border-radius: 1rem; margin-bottom: 0.75rem; padding: 1rem; background: #fafafa; }
         .history-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin: 2px; background: #e5e7eb; color: #6b7280; }
@@ -138,21 +140,11 @@
             const prizeContainer = document.querySelector('.prizes-container');
             prizeContainer.innerHTML = state.map(item => {
                 const out = item.count === 0;
-                // [수정] A~D상 여부 확인하여 클래스 부여
                 const isSpecial = ['A','B','C','D'].includes(item.id);
                 const rowClass = isSpecial ? 'prize-row-special' : '';
                 const gradeLabelColor = isSpecial ? 'text-black opacity-60' : 'text-zinc-400';
-                
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
-                
-                return `
-                    <div class="prize-row ${rowClass} ${out ? 'opacity-20' : ''}">
-                        <div class="flex flex-col text-left">
-                            <span class="text-[9px] font-bold uppercase mb-1 tracking-wider ${gradeLabelColor}">${item.id} GRADE</span>
-                            <span class="font-bold text-lg leading-none text-black">${item.name}</span>
-                        </div>
-                        <span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span>
-                    </div>`;
+                return `<div class="prize-row ${rowClass} ${out ? 'opacity-20' : ''}"><div class="flex flex-col text-left"><span class="text-[9px] font-bold uppercase mb-1 tracking-wider ${gradeLabelColor}">${item.id} GRADE</span><span class="font-bold text-lg leading-none text-black">${item.name}</span></div><span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span></div>`;
             }).join('');
         }
 
@@ -165,7 +157,16 @@
                     <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Total Draws</p><p class="text-3xl font-black">${totalDrawn}</p></div>
                     <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Stock Left</p><p class="text-3xl font-black">${totalRemaining}</p></div>
                 </div>
+                <div id="prize-bars" class="space-y-3 mb-10"></div>
             `;
+            const barsContainer = document.getElementById('prize-bars');
+            barsContainer.innerHTML = state.map(item => {
+                const initial = PRIZE_CONFIG.find(p => p.id === item.id).count;
+                const drawn = initial - item.count;
+                const percent = ((drawn / initial) * 100).toFixed(1);
+                const isSpecial = ['A','B','C','D'].includes(item.id);
+                return `<div class="flex flex-col gap-1 text-black"><div class="flex justify-between text-[11px] font-bold"><span>${item.name}</span><span class="opacity-50">${drawn} / ${initial} EA</span></div><div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full ${isSpecial ? 'bg-[#f8ff00]' : 'bg-black'}" style="width: ${percent}%"></div></div></div>`;
+            }).join('');
             if (sessionLogs.length === 0) {
                 statsContainer.innerHTML += `<div class="text-zinc-300 italic text-sm py-10">데이터가 없습니다.</div>`;
             } else {
@@ -234,12 +235,9 @@
                 if (picked.id === 'A') hasA = true;
 
                 const isSpecial = ['A','B','C','D'].includes(picked.id);
-                const cardClass = isSpecial ? 'card-special' : 'card-normal';
-                const winBgClass = isSpecial ? 'bg-black text-[#f8ff00]' : 'bg-black text-white';
-
                 const card = document.createElement('div');
-                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${cardClass}`;
-                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecial ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${winBgClass}">Win</div>`;
+                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${isSpecial ? 'card-special' : 'card-normal'}`;
+                card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecial ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${isSpecial ? 'bg-black text-[#f8ff00]' : 'bg-black text-white'}">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
                 await new Promise(r => setTimeout(r, 80));
@@ -248,12 +246,24 @@
             if (hasA) confetti.start();
             sessionLogs.push({ time: timeStr, items: pickedItems });
             save();
-            const summary = pickedItems.reduce((acc, cur) => { acc[cur.name] = (acc[cur.name] || 0) + 1; return acc; }, {});
+
+            // [수정] 결과 요약 배지 생성 로직
+            const summary = pickedItems.reduce((acc, cur) => { 
+                if (!acc[cur.name]) acc[cur.name] = { count: 0, grade: cur.grade };
+                acc[cur.name].count++; 
+                return acc; 
+            }, {});
+
             document.getElementById('summary-area').classList.remove('hidden');
-            Object.entries(summary).forEach(([name, count]) => {
-                const b = document.createElement('div'); b.className = "summary-badge px-4 py-1.5 text-[11px] font-bold"; b.innerText = `${name} × ${count}`;
+            Object.entries(summary).forEach(([name, data]) => {
+                const b = document.createElement('div');
+                // A~D 등급 상품이면 노란색 강조 클래스(summary-special) 부여
+                const isSpecial = ['A','B','C','D'].includes(data.grade);
+                b.className = `summary-badge px-4 py-1.5 text-[11px] ${isSpecial ? 'summary-special' : 'summary-normal'}`;
+                b.innerText = `${name} × ${data.count}`;
                 document.getElementById('summary-area').appendChild(b);
             });
+            
             document.getElementById('draw-button').disabled = false;
             document.getElementById('undo-button').classList.remove('hidden');
         }
