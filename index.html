@@ -11,32 +11,25 @@
         .main-card { background: #ffffff; border: 2px solid #000000; border-radius: 2.5rem; box-shadow: 10px 10px 0px #000000; position: relative; z-index: 10; }
         .inventory-section { background: #ffffff; border: 2px solid #000000; border-bottom: none; border-radius: 2.5rem 2.5rem 0 0; width: 100%; padding: 2.5rem 1.8rem; overflow: visible !important; display: block !important; }
         .inventory-base { background: #000000; height: 12px; width: 100%; border-radius: 0 0 2.5rem 2.5rem; margin-top: -2px; margin-bottom: 50px; }
-        
         .prize-row { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 1rem; border-bottom: 1px solid #f0f0f0; margin: 0 -0.5rem; }
         .prize-row:last-child { border-bottom: none; }
         .prize-row-special { background: #f8ff00; border-radius: 1rem; border: 1.5px solid #000000; margin-bottom: 0.5rem; box-shadow: 2px 2px 0px #000000; }
-        .prize-row-special span { color: #000000 !important; }
-
         .result-card { border: 1px solid #000000; animation: slideIn 0.3s ease-out forwards; border-radius: 1.2rem; }
         .card-normal { background: #f3f4f6; color: black; }
         .card-special { background: #f8ff00 !important; color: #000000 !important; border: 2px solid #000000; box-shadow: 4px 4px 0px #000000; }
-        
-        /* [수정] 요약 배지 스타일 */
         .summary-badge { border-radius: 99px; border: 1.5px solid #000; }
         .summary-normal { background: #000000; color: #ffffff; }
         .summary-special { background: #f8ff00; color: #000000; font-weight: 900; }
-
         .glow-highlight { color: #f8ff00; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
         .history-item { border: 1px solid #e5e7eb; border-radius: 1rem; margin-bottom: 0.75rem; padding: 1rem; background: #fafafa; }
         .history-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin: 2px; background: #e5e7eb; color: #6b7280; }
         .tag-special { background: #f8ff00; color: #000; border: 1px solid #000; }
         @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .hidden { display: none !important; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
-        
         .qty-input { width: 120px; height: 60px; border: 3px solid #000000; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; text-align: center; outline: none; background: #ffffff; }
         .qty-input:focus { background: #f8ff00; }
+        .hidden { display: none !important; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="py-10 px-6">
@@ -74,10 +67,10 @@
         </div>
         <div class="inventory-base"></div>
 
-        <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left">
+        <div id="admin-panel" class="hidden fixed inset-0 z-50 bg-white p-8 overflow-y-auto text-left text-black">
             <div class="flex justify-between items-center mb-8 pb-4 border-b-2 border-black">
-                <h2 class="font-black text-2xl italic tracking-tighter text-black uppercase">Admin Dashboard</h2>
-                <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm text-black">CLOSE</button>
+                <h2 class="font-black text-2xl italic tracking-tighter uppercase">Admin Dashboard</h2>
+                <button onclick="toggleAdminTab()" class="px-4 py-2 border-2 border-black font-bold rounded-xl text-sm">CLOSE</button>
             </div>
             <div id="history-log-list" class="space-y-4"></div>
             <button onclick="fullReset()" class="w-full mt-10 py-4 bg-red-50 text-red-600 border-2 border-red-600 rounded-2xl font-bold uppercase text-xs">System Factory Reset</button>
@@ -85,14 +78,21 @@
     </div>
 
     <script>
-        const PRIZE_CONFIG = [
-            { id: 'A', name: '바지', count: 1, limitPerQuart: [0, 0, 1, 1] }, 
-            { id: 'B', name: '반다나', count: 9, limitPerQuart: [2, 5, 7, 9] }, 
-            { id: 'C', name: '사인폴라로이드', count: 15, limitPerQuart: [4, 8, 12, 15] },
-            { id: 'D', name: '사인앨범', count: 15, limitPerQuart: [4, 8, 12, 15] },
-            { id: 'E', name: '손그림 로고 키링', count: 100 },
-            { id: 'F', name: '포토카드', count: 300, hideCount: true },
-            { id: 'G', name: '엽서 (4종 중 랜덤 1종)', count: 360, hideCount: true }
+        // 초기 설정값 (총 800회 기준 확률 관리용 오리지널 카운트 포함)
+        const ORIGINAL_CONFIG = [
+            { id: 'A', name: '바지', total: 1, limitPerQuart: [0, 0, 1, 1] }, 
+            { id: 'B', name: '반다나', total: 9, limitPerQuart: [2, 5, 7, 9] }, 
+            { id: 'C', name: '사인폴라로이드', total: 15, limitPerQuart: [4, 8, 12, 15] },
+            { id: 'D', name: '사인 앨범', total: 15, limitPerQuart: [4, 8, 12, 15] },
+            { id: 'E', name: '손그림 로고 키링', total: 100 },
+            { id: 'F', name: '포토카드', total: 300, hideCount: true },
+            { id: 'G', name: '엽서', total: 360, hideCount: true }
+        ];
+
+        // 알려주신 현재 남은 수량
+        const CURRENT_STOCK = [
+            { id: 'A', count: 1 }, { id: 'B', count: 7 }, { id: 'C', count: 9 },
+            { id: 'D', count: 15 }, { id: 'E', count: 78 }, { id: 'F', count: 244 }, { id: 'G', count: 73 }
         ];
 
         let state = [];
@@ -104,15 +104,24 @@
             resize: function() { this.canvas.width = window.innerWidth; this.canvas.height = window.innerHeight; },
             createParticle: function() { return { x: Math.random() * this.canvas.width, y: -20, size: Math.random() * 10 + 5, color: this.colors[Math.floor(Math.random() * this.colors.length)], speedY: Math.random() * 8 + 4, speedX: Math.random() * 4 - 2, rot: Math.random() * 10, rotS: Math.random() * 0.4 - 0.2 }; },
             start: function() { if (this.isRunning) return; this.isRunning = true; this.particles = Array.from({length:750}, () => this.createParticle()); this.animate(); setTimeout(() => this.stop(), 10000); },
-            stop: function() { this.isRunning = false; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); },
+            stop: function() { this.isRunning = false; if(this.ctx) this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); },
             animate: function() { if (!this.isRunning && this.particles.every(p => p.y > this.canvas.height)) return; this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height); this.particles.forEach(p => { p.y += p.speedY; p.x += p.speedX; p.rot += p.rotS; this.ctx.save(); this.ctx.translate(p.x, p.y); this.ctx.rotate(p.rot); this.ctx.fillStyle = p.color; this.ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size); this.ctx.restore(); if (p.y > this.canvas.height && this.isRunning) p.y = -20; }); requestAnimationFrame(() => this.animate()); }
         };
 
         function init() {
-            const savedState = localStorage.getItem('glow_final_v800_state');
-            const savedLogs = localStorage.getItem('glow_final_v800_logs');
-            if (savedState) state = JSON.parse(savedState);
-            else { state = JSON.parse(JSON.stringify(PRIZE_CONFIG)); save(); }
+            const savedState = localStorage.getItem('glow_prob_v901_state');
+            const savedLogs = localStorage.getItem('glow_prob_v901_logs');
+            
+            if (savedState) {
+                state = JSON.parse(savedState);
+            } else {
+                // 저장된 게 없으면 알려주신 현재 수량으로 초기화
+                state = ORIGINAL_CONFIG.map(item => {
+                    const current = CURRENT_STOCK.find(s => s.id === item.id);
+                    return { ...item, count: current ? current.count : 0 };
+                });
+                save();
+            }
             if (savedLogs) sessionLogs = JSON.parse(savedLogs);
             confetti.init();
             render();
@@ -120,20 +129,8 @@
         }
 
         function save() {
-            localStorage.setItem('glow_final_v800_state', JSON.stringify(state));
-            localStorage.setItem('glow_final_v800_logs', JSON.stringify(sessionLogs));
-        }
-
-        function toggleAdminTab() {
-            const panel = document.getElementById('admin-panel');
-            panel.classList.toggle('hidden');
-            if(!panel.classList.contains('hidden')) renderHistory();
-        }
-
-        function updateBtnLabel() {
-            const qty = document.getElementById('buy-qty').value;
-            const label = document.getElementById('draw-label');
-            label.innerText = qty < 1 ? `구매 수량을 입력하세요` : `GLOW♡ (${qty})`;
+            localStorage.setItem('glow_prob_v901_state', JSON.stringify(state));
+            localStorage.setItem('glow_prob_v901_logs', JSON.stringify(sessionLogs));
         }
 
         function render() {
@@ -141,50 +138,18 @@
             prizeContainer.innerHTML = state.map(item => {
                 const out = item.count === 0;
                 const isSpecial = ['A','B','C','D'].includes(item.id);
-                const rowClass = isSpecial ? 'prize-row-special' : '';
-                const gradeLabelColor = isSpecial ? 'text-black opacity-60' : 'text-zinc-400';
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
-                return `<div class="prize-row ${rowClass} ${out ? 'opacity-20' : ''}"><div class="flex flex-col text-left"><span class="text-[9px] font-bold uppercase mb-1 tracking-wider ${gradeLabelColor}">${item.id} GRADE</span><span class="font-bold text-lg leading-none text-black">${item.name}</span></div><span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span></div>`;
+                return `<div class="prize-row ${isSpecial ? 'prize-row-special' : ''} ${out ? 'opacity-20' : ''}"><div class="flex flex-col text-left"><span class="text-[9px] font-bold uppercase mb-1 tracking-wider ${isSpecial ? 'text-black opacity-60' : 'text-zinc-400'}">${item.id} GRADE</span><span class="font-bold text-lg leading-none text-black">${item.name}</span></div><span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span></div>`;
             }).join('');
-        }
-
-        function renderHistory() {
-            const totalDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
-            const totalRemaining = state.reduce((acc, s) => acc + s.count, 0);
-            const statsContainer = document.getElementById('history-log-list');
-            statsContainer.innerHTML = `
-                <div class="grid grid-cols-2 gap-4 mb-8 text-black">
-                    <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Total Draws</p><p class="text-3xl font-black">${totalDrawn}</p></div>
-                    <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Stock Left</p><p class="text-3xl font-black">${totalRemaining}</p></div>
-                </div>
-                <div id="prize-bars" class="space-y-3 mb-10"></div>
-            `;
-            const barsContainer = document.getElementById('prize-bars');
-            barsContainer.innerHTML = state.map(item => {
-                const initial = PRIZE_CONFIG.find(p => p.id === item.id).count;
-                const drawn = initial - item.count;
-                const percent = ((drawn / initial) * 100).toFixed(1);
-                const isSpecial = ['A','B','C','D'].includes(item.id);
-                return `<div class="flex flex-col gap-1 text-black"><div class="flex justify-between text-[11px] font-bold"><span>${item.name}</span><span class="opacity-50">${drawn} / ${initial} EA</span></div><div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full ${isSpecial ? 'bg-[#f8ff00]' : 'bg-black'}" style="width: ${percent}%"></div></div></div>`;
-            }).join('');
-            if (sessionLogs.length === 0) {
-                statsContainer.innerHTML += `<div class="text-zinc-300 italic text-sm py-10">데이터가 없습니다.</div>`;
-            } else {
-                statsContainer.innerHTML += sessionLogs.slice().reverse().map(session => `
-                    <div class="history-item text-black p-4 border border-zinc-100 rounded-xl mb-2">
-                        <div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold opacity-40 uppercase tracking-widest">${session.time}</span><span class="text-[10px] font-black bg-zinc-200 px-2 py-0.5 rounded">${session.items.length}개</span></div>
-                        <div class="flex flex-wrap">${session.items.map(i => `<span class="history-tag ${['A','B','C','D'].includes(i.grade) ? 'tag-special' : ''}">${i.name}</span>`).join('')}</div>
-                    </div>
-                `).join('');
-            }
         }
 
         function undoLastDraw() {
             if (sessionLogs.length === 0) return;
-            if (!confirm("방금 진행한 뽑기 내역을 삭제하고 재고를 다시 채울까요?")) return;
-            const lastSession = sessionLogs.pop();
-            lastSession.items.forEach(pickedItem => {
-                const target = state.find(s => s.id === pickedItem.grade);
+            const lastSession = sessionLogs[sessionLogs.length - 1];
+            if (!confirm(`방금 뽑은 내역을 취소하고 재고를 원복하시겠습니까?`)) return;
+            const undone = sessionLogs.pop(); 
+            undone.items.forEach(i => {
+                const target = state.find(s => s.id === i.grade);
                 if (target) target.count++;
             });
             save(); render();
@@ -198,16 +163,15 @@
         async function executeDraw() {
             const inputQty = document.getElementById('buy-qty').value;
             const drawQty = parseInt(inputQty);
-            if (isNaN(drawQty) || drawQty < 1) { alert("1장 이상의 수량을 입력해주세요."); return; }
-            const totalRemaining = state.reduce((acc, cur) => acc + cur.count, 0);
-            if (totalRemaining < drawQty) { alert("잔여 수량이 부족합니다."); return; }
+            if (isNaN(drawQty) || drawQty < 1) return;
+            const totalStock = state.reduce((acc, cur) => acc + cur.count, 0);
+            if (totalStock < drawQty) { alert("잔여 재고가 부족합니다."); return; }
             
             document.getElementById('draw-button').disabled = true;
             document.getElementById('undo-button').classList.add('hidden');
             document.getElementById('intro-text').classList.add('hidden');
             document.getElementById('results-wrapper').innerHTML = "";
             document.getElementById('summary-area').innerHTML = "";
-            document.getElementById('summary-area').classList.add('hidden');
 
             let pickedItems = [];
             let hasA = false;
@@ -215,22 +179,32 @@
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
             for (let i = 0; i < drawQty; i++) {
-                const currentTotalDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0) + pickedItems.length;
-                const currentQuart = Math.floor(currentTotalDrawn / 200);
+                // 현재까지 총 몇 번 뽑혔는지 계산 (알려주신 157회 기준 시작)
+                const alreadyDrawnCount = 800 - state.reduce((acc, s) => acc + s.count, 0);
+                const currentQuart = Math.floor(alreadyDrawnCount / 200);
+                
+                // 확률 필터링: 각 쿼터별 제한 수량을 넘지 않는 것들만 pool에 넣음
                 const pool = state.filter(item => {
                     if (item.count <= 0) return false;
                     if (item.limitPerQuart) {
-                        const max = item.limitPerQuart[currentQuart];
-                        const drawnTotal = PRIZE_CONFIG.find(p => p.id === item.id).count - item.count;
-                        if (drawnTotal >= max) return false;
+                        const maxAllowed = item.limitPerQuart[currentQuart];
+                        const alreadyOut = item.total - item.count;
+                        if (alreadyOut >= maxAllowed) return false;
                     }
                     return true;
                 });
+
+                // 만약 pool이 비어있으면(모두 제한에 걸리면) 일반 경품(E,F,G) 중에서 뽑음
                 const fallback = pool.length > 0 ? pool : state.filter(item => item.count > 0 && !item.limitPerQuart);
+                
                 const total = fallback.reduce((acc, cur) => acc + cur.count, 0);
                 let rand = Math.floor(Math.random() * total);
                 let acc = 0; let picked = null;
-                for (let t of fallback) { acc += t.count; if (rand < acc) { picked = t; state.find(o => o.id === t.id).count--; break; } }
+                for (let t of fallback) { 
+                    acc += t.count; 
+                    if (rand < acc) { picked = t; t.count--; break; } 
+                }
+
                 pickedItems.push({ name: picked.name, grade: picked.id });
                 if (picked.id === 'A') hasA = true;
 
@@ -247,28 +221,55 @@
             sessionLogs.push({ time: timeStr, items: pickedItems });
             save();
 
-            // [수정] 결과 요약 배지 생성 로직
             const summary = pickedItems.reduce((acc, cur) => { 
                 if (!acc[cur.name]) acc[cur.name] = { count: 0, grade: cur.grade };
-                acc[cur.name].count++; 
-                return acc; 
+                acc[cur.name].count++; return acc; 
             }, {});
 
             document.getElementById('summary-area').classList.remove('hidden');
             Object.entries(summary).forEach(([name, data]) => {
                 const b = document.createElement('div');
-                // A~D 등급 상품이면 노란색 강조 클래스(summary-special) 부여
                 const isSpecial = ['A','B','C','D'].includes(data.grade);
                 b.className = `summary-badge px-4 py-1.5 text-[11px] ${isSpecial ? 'summary-special' : 'summary-normal'}`;
                 b.innerText = `${name} × ${data.count}`;
                 document.getElementById('summary-area').appendChild(b);
             });
-            
             document.getElementById('draw-button').disabled = false;
             document.getElementById('undo-button').classList.remove('hidden');
         }
 
-        function fullReset() { if(confirm("Factory Reset?")) { localStorage.clear(); location.reload(); } }
+        function toggleAdminTab() {
+            const panel = document.getElementById('admin-panel');
+            panel.classList.toggle('hidden');
+            if(!panel.classList.contains('hidden')) renderHistory();
+        }
+
+        function renderHistory() {
+            const totalRemaining = state.reduce((acc, s) => acc + s.count, 0);
+            const totalDrawn = 800 - totalRemaining;
+            const list = document.getElementById('history-log-list');
+            list.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Total Draws</p><p class="text-3xl font-black">${totalDrawn}</p></div>
+                    <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Stock Left</p><p class="text-3xl font-black">${totalRemaining}</p></div>
+                </div>
+                <div class="space-y-3 mb-10">${state.map(item => {
+                    const initial = ORIGINAL_CONFIG.find(p => p.id === item.id).total;
+                    const drawn = initial - item.count;
+                    const percent = ((drawn / initial) * 100).toFixed(1);
+                    const isS = ['A','B','C','D'].includes(item.id);
+                    return `<div class="flex flex-col gap-1"><div class="flex justify-between text-[11px] font-bold"><span>${item.name}</span><span class="opacity-50">${drawn}/${initial}</span></div><div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full ${isS ? 'bg-[#f8ff00]' : 'bg-black'}" style="width: ${percent}%"></div></div></div>`;
+                }).join('')}</div>
+                ${sessionLogs.slice().reverse().map(s => `<div class="history-item p-4 border border-zinc-100 rounded-xl mb-2"><div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold opacity-40 uppercase tracking-widest">${s.time}</span><span class="text-[10px] font-black bg-zinc-200 px-2 py-0.5 rounded">${s.items.length}개</span></div><div class="flex flex-wrap">${s.items.map(i => `<span class="history-tag ${['A','B','C','D'].includes(i.grade) ? 'tag-special' : ''}">${i.name}</span>`).join('')}</div></div>`).join('')}
+            `;
+        }
+
+        function updateBtnLabel() {
+            const qty = document.getElementById('buy-qty').value;
+            document.getElementById('draw-label').innerText = qty < 1 ? `Enter Qty` : `GLOW♡ (${qty})`;
+        }
+
+        function fullReset() { if(confirm("초기화하시겠습니까? 알려주신 157회 시점 수량으로 리셋됩니다.")) { localStorage.clear(); location.reload(); } }
         init();
     </script>
 </body>
