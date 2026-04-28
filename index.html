@@ -78,7 +78,7 @@
     </div>
 
     <script>
-        // 초기 설정값 (총 800회 기준 확률 관리용 오리지널 카운트 포함)
+        // 초기 설정: 800개 기준 확률 관리 정보
         const ORIGINAL_CONFIG = [
             { id: 'A', name: '바지', total: 1, limitPerQuart: [0, 0, 1, 1] }, 
             { id: 'B', name: '반다나', total: 9, limitPerQuart: [2, 5, 7, 9] }, 
@@ -89,14 +89,13 @@
             { id: 'G', name: '엽서', total: 360, hideCount: true }
         ];
 
-        // 알려주신 현재 남은 수량
-        const CURRENT_STOCK = [
-            { id: 'A', count: 1 }, { id: 'B', count: 7 }, { id: 'C', count: 9 },
-            { id: 'D', count: 15 }, { id: 'E', count: 78 }, { id: 'F', count: 244 }, { id: 'G', count: 73 }
-        ];
+        // [중요] 알려주신 실제 현재 재고 수량 강제 주입
+        const START_STOCK = { 'A':1, 'B':7, 'C':9, 'D':15, 'E':78, 'F':244, 'G':73 };
+        const START_DRAW_COUNT = 157; // 시작 횟수 고정
 
         let state = [];
         let sessionLogs = [];
+        let totalDrawnOffset = START_DRAW_COUNT; // 누적 오프셋
 
         const confetti = {
             canvas: null, ctx: null, particles: [], colors: ['#f8ff00', '#000000', '#ffffff'], isRunning: false,
@@ -109,17 +108,18 @@
         };
 
         function init() {
-            const savedState = localStorage.getItem('glow_prob_v901_state');
-            const savedLogs = localStorage.getItem('glow_prob_v901_logs');
+            // 충돌 방지를 위해 키 값 변경 (v905)
+            const savedState = localStorage.getItem('glow_v905_state');
+            const savedLogs = localStorage.getItem('glow_v905_logs');
             
             if (savedState) {
                 state = JSON.parse(savedState);
             } else {
-                // 저장된 게 없으면 알려주신 현재 수량으로 초기화
-                state = ORIGINAL_CONFIG.map(item => {
-                    const current = CURRENT_STOCK.find(s => s.id === item.id);
-                    return { ...item, count: current ? current.count : 0 };
-                });
+                // 초기화 시 알려주신 수량으로 정확히 세팅
+                state = ORIGINAL_CONFIG.map(item => ({
+                    ...item,
+                    count: START_STOCK[item.id]
+                }));
                 save();
             }
             if (savedLogs) sessionLogs = JSON.parse(savedLogs);
@@ -129,8 +129,8 @@
         }
 
         function save() {
-            localStorage.setItem('glow_prob_v901_state', JSON.stringify(state));
-            localStorage.setItem('glow_prob_v901_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_v905_state', JSON.stringify(state));
+            localStorage.setItem('glow_v905_logs', JSON.stringify(sessionLogs));
         }
 
         function render() {
@@ -145,7 +145,6 @@
 
         function undoLastDraw() {
             if (sessionLogs.length === 0) return;
-            const lastSession = sessionLogs[sessionLogs.length - 1];
             if (!confirm(`방금 뽑은 내역을 취소하고 재고를 원복하시겠습니까?`)) return;
             const undone = sessionLogs.pop(); 
             undone.items.forEach(i => {
@@ -179,11 +178,11 @@
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
             for (let i = 0; i < drawQty; i++) {
-                // 현재까지 총 몇 번 뽑혔는지 계산 (알려주신 157회 기준 시작)
-                const alreadyDrawnCount = 800 - state.reduce((acc, s) => acc + s.count, 0);
-                const currentQuart = Math.floor(alreadyDrawnCount / 200);
+                // 현재 세션에서의 실제 총 드로우 횟수 계산
+                const currentSessionDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
+                const currentTotalDrawn = START_DRAW_COUNT + currentSessionDrawn + pickedItems.length;
+                const currentQuart = Math.floor(currentTotalDrawn / 200);
                 
-                // 확률 필터링: 각 쿼터별 제한 수량을 넘지 않는 것들만 pool에 넣음
                 const pool = state.filter(item => {
                     if (item.count <= 0) return false;
                     if (item.limitPerQuart) {
@@ -194,16 +193,11 @@
                     return true;
                 });
 
-                // 만약 pool이 비어있으면(모두 제한에 걸리면) 일반 경품(E,F,G) 중에서 뽑음
                 const fallback = pool.length > 0 ? pool : state.filter(item => item.count > 0 && !item.limitPerQuart);
-                
                 const total = fallback.reduce((acc, cur) => acc + cur.count, 0);
                 let rand = Math.floor(Math.random() * total);
                 let acc = 0; let picked = null;
-                for (let t of fallback) { 
-                    acc += t.count; 
-                    if (rand < acc) { picked = t; t.count--; break; } 
-                }
+                for (let t of fallback) { acc += t.count; if (rand < acc) { picked = t; t.count--; break; } }
 
                 pickedItems.push({ name: picked.name, grade: picked.id });
                 if (picked.id === 'A') hasA = true;
@@ -245,8 +239,10 @@
         }
 
         function renderHistory() {
+            const sessionDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
+            const totalDrawn = START_DRAW_COUNT + sessionDrawn;
             const totalRemaining = state.reduce((acc, s) => acc + s.count, 0);
-            const totalDrawn = 800 - totalRemaining;
+            
             const list = document.getElementById('history-log-list');
             list.innerHTML = `
                 <div class="grid grid-cols-2 gap-4 mb-8">
@@ -269,7 +265,7 @@
             document.getElementById('draw-label').innerText = qty < 1 ? `Enter Qty` : `GLOW♡ (${qty})`;
         }
 
-        function fullReset() { if(confirm("초기화하시겠습니까? 알려주신 157회 시점 수량으로 리셋됩니다.")) { localStorage.clear(); location.reload(); } }
+        function fullReset() { if(confirm("초기화하시겠습니까? 157회 시점 데이터로 복구됩니다.")) { localStorage.clear(); location.reload(); } }
         init();
     </script>
 </body>
