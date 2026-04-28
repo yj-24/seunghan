@@ -78,8 +78,8 @@
 
     <script>
         const ORIGINAL_TOTALS = { 'A':1, 'B':9, 'C':15, 'D':15, 'E':100, 'F':300, 'G':360 };
-        // [수정] 알려주신 데이터를 기반으로 "남은 수량" 정확히 재계산
-        const START_STOCK = { 'A':1, 'B':7, 'C':9, 'D':15, 'E':78, 'F':244, 'G':287 }; 
+        // [핵심] 현재 남은 재고 정확히 주입 (폴라로이드 11개)
+        const START_STOCK = { 'A':1, 'B':7, 'C':11, 'D':15, 'E':78, 'F':244, 'G':287 }; 
         const START_DRAW_COUNT = 157; 
 
         let state = [];
@@ -96,9 +96,9 @@
         };
 
         function init() {
-            // 키 값을 v907로 변경하여 새로운 로직 강제 적용
-            const savedState = localStorage.getItem('glow_v907_state');
-            const savedLogs = localStorage.getItem('glow_v907_logs');
+            // 새 버전 키로 업데이트 강제 적용
+            const savedState = localStorage.getItem('glow_v908_state');
+            const savedLogs = localStorage.getItem('glow_v908_logs');
             
             if (savedState) {
                 state = JSON.parse(savedState);
@@ -121,8 +121,8 @@
         }
 
         function save() {
-            localStorage.setItem('glow_v907_state', JSON.stringify(state));
-            localStorage.setItem('glow_v907_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_v908_state', JSON.stringify(state));
+            localStorage.setItem('glow_v908_logs', JSON.stringify(sessionLogs));
         }
 
         function render() {
@@ -256,7 +256,7 @@
             document.getElementById('draw-label').innerText = qty < 1 ? `Enter Qty` : `GLOW♡ (${qty})`;
         }
 
-        function fullReset() { if(confirm("초기화하시겠습니까? 데이터가 157회 시점으로 돌아갑니다.")) { localStorage.clear(); location.reload(); } }
+        function fullReset() { if(confirm("초기화하시겠습니까? v908 시점 데이터로 돌아갑니다.")) { localStorage.clear(); location.reload(); } }
         init();
     </script>
 </body>
