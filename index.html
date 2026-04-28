@@ -21,15 +21,14 @@
         .summary-normal { background: #000000; color: #ffffff; }
         .summary-special { background: #f8ff00; color: #000000; font-weight: 900; }
         .glow-highlight { color: #f8ff00; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
-        .history-item { border: 1px solid #e5e7eb; border-radius: 1rem; margin-bottom: 0.75rem; padding: 1rem; background: #fafafa; }
-        .history-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin: 2px; background: #e5e7eb; color: #6b7280; }
-        .tag-special { background: #f8ff00; color: #000; border: 1px solid #000; }
         @keyframes slideIn { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
         .qty-input { width: 120px; height: 60px; border: 3px solid #000000; border-radius: 1rem; font-size: 1.5rem; font-weight: 900; text-align: center; outline: none; background: #ffffff; }
         .qty-input:focus { background: #f8ff00; }
         .hidden { display: none !important; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        .history-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; margin: 2px; background: #e5e7eb; color: #6b7280; }
+        .tag-special { background: #f8ff00; color: #000; border: 1px solid #000; }
     </style>
 </head>
 <body class="py-10 px-6">
@@ -78,24 +77,13 @@
     </div>
 
     <script>
-        // 초기 설정: 800개 기준 확률 관리 정보
-        const ORIGINAL_CONFIG = [
-            { id: 'A', name: '바지', total: 1, limitPerQuart: [0, 0, 1, 1] }, 
-            { id: 'B', name: '반다나', total: 9, limitPerQuart: [2, 5, 7, 9] }, 
-            { id: 'C', name: '사인폴라로이드', total: 15, limitPerQuart: [4, 8, 12, 15] },
-            { id: 'D', name: '사인 앨범', total: 15, limitPerQuart: [4, 8, 12, 15] },
-            { id: 'E', name: '손그림 로고 키링', total: 100 },
-            { id: 'F', name: '포토카드', total: 300, hideCount: true },
-            { id: 'G', name: '엽서', total: 360, hideCount: true }
-        ];
-
-        // [중요] 알려주신 실제 현재 재고 수량 강제 주입
-        const START_STOCK = { 'A':1, 'B':7, 'C':9, 'D':15, 'E':78, 'F':244, 'G':73 };
-        const START_DRAW_COUNT = 157; // 시작 횟수 고정
+        const ORIGINAL_TOTALS = { 'A':1, 'B':9, 'C':15, 'D':15, 'E':100, 'F':300, 'G':360 };
+        // [수정] 알려주신 데이터를 기반으로 "남은 수량" 정확히 재계산
+        const START_STOCK = { 'A':1, 'B':7, 'C':9, 'D':15, 'E':78, 'F':244, 'G':287 }; 
+        const START_DRAW_COUNT = 157; 
 
         let state = [];
         let sessionLogs = [];
-        let totalDrawnOffset = START_DRAW_COUNT; // 누적 오프셋
 
         const confetti = {
             canvas: null, ctx: null, particles: [], colors: ['#f8ff00', '#000000', '#ffffff'], isRunning: false,
@@ -108,18 +96,22 @@
         };
 
         function init() {
-            // 충돌 방지를 위해 키 값 변경 (v905)
-            const savedState = localStorage.getItem('glow_v905_state');
-            const savedLogs = localStorage.getItem('glow_v905_logs');
+            // 키 값을 v907로 변경하여 새로운 로직 강제 적용
+            const savedState = localStorage.getItem('glow_v907_state');
+            const savedLogs = localStorage.getItem('glow_v907_logs');
             
             if (savedState) {
                 state = JSON.parse(savedState);
             } else {
-                // 초기화 시 알려주신 수량으로 정확히 세팅
-                state = ORIGINAL_CONFIG.map(item => ({
-                    ...item,
-                    count: START_STOCK[item.id]
-                }));
+                state = [
+                    { id: 'A', name: '바지', count: START_STOCK.A, total: ORIGINAL_TOTALS.A, limitPerQuart: [0, 0, 1, 1] },
+                    { id: 'B', name: '반다나', count: START_STOCK.B, total: ORIGINAL_TOTALS.B, limitPerQuart: [2, 5, 7, 9] },
+                    { id: 'C', name: '사인폴라로이드', count: START_STOCK.C, total: ORIGINAL_TOTALS.C, limitPerQuart: [4, 8, 12, 15] },
+                    { id: 'D', name: '사인 앨범', count: START_STOCK.D, total: ORIGINAL_TOTALS.D, limitPerQuart: [4, 8, 12, 15] },
+                    { id: 'E', name: '손그림 로고 키링', count: START_STOCK.E, total: ORIGINAL_TOTALS.E },
+                    { id: 'F', name: '포토카드', count: START_STOCK.F, total: ORIGINAL_TOTALS.F, hideCount: true },
+                    { id: 'G', name: '엽서 (4종 중 랜덤 1종)', count: START_STOCK.G, total: ORIGINAL_TOTALS.G, hideCount: true }
+                ];
                 save();
             }
             if (savedLogs) sessionLogs = JSON.parse(savedLogs);
@@ -129,14 +121,14 @@
         }
 
         function save() {
-            localStorage.setItem('glow_v905_state', JSON.stringify(state));
-            localStorage.setItem('glow_v905_logs', JSON.stringify(sessionLogs));
+            localStorage.setItem('glow_v907_state', JSON.stringify(state));
+            localStorage.setItem('glow_v907_logs', JSON.stringify(sessionLogs));
         }
 
         function render() {
             const prizeContainer = document.querySelector('.prizes-container');
             prizeContainer.innerHTML = state.map(item => {
-                const out = item.count === 0;
+                const out = item.count <= 0;
                 const isSpecial = ['A','B','C','D'].includes(item.id);
                 let statusText = item.hideCount ? (out ? "SOLD OUT" : "IN STOCK") : (out ? "SOLD OUT" : `${item.count} LEFT`);
                 return `<div class="prize-row ${isSpecial ? 'prize-row-special' : ''} ${out ? 'opacity-20' : ''}"><div class="flex flex-col text-left"><span class="text-[9px] font-bold uppercase mb-1 tracking-wider ${isSpecial ? 'text-black opacity-60' : 'text-zinc-400'}">${item.id} GRADE</span><span class="font-bold text-lg leading-none text-black">${item.name}</span></div><span class="text-[10px] font-black ${item.hideCount && !out ? 'text-blue-600' : 'text-zinc-400'}">${statusText}</span></div>`;
@@ -145,7 +137,7 @@
 
         function undoLastDraw() {
             if (sessionLogs.length === 0) return;
-            if (!confirm(`방금 뽑은 내역을 취소하고 재고를 원복하시겠습니까?`)) return;
+            if (!confirm(`방금 뽑은 내역을 취소하시겠습니까?`)) return;
             const undone = sessionLogs.pop(); 
             undone.items.forEach(i => {
                 const target = state.find(s => s.id === i.grade);
@@ -178,9 +170,8 @@
             const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
 
             for (let i = 0; i < drawQty; i++) {
-                // 현재 세션에서의 실제 총 드로우 횟수 계산
-                const currentSessionDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
-                const currentTotalDrawn = START_DRAW_COUNT + currentSessionDrawn + pickedItems.length;
+                const sessionDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
+                const currentTotalDrawn = START_DRAW_COUNT + sessionDrawn + pickedItems.length;
                 const currentQuart = Math.floor(currentTotalDrawn / 200);
                 
                 const pool = state.filter(item => {
@@ -203,8 +194,9 @@
                 if (picked.id === 'A') hasA = true;
 
                 const isSpecial = ['A','B','C','D'].includes(picked.id);
+                const cardClass = isSpecial ? 'card-special' : 'card-normal';
                 const card = document.createElement('div');
-                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${isSpecial ? 'card-special' : 'card-normal'}`;
+                card.className = `result-card p-4 flex justify-between items-center shadow-sm mb-2 text-left text-black ${cardClass}`;
                 card.innerHTML = `<div class="flex flex-col"><span class="text-[9px] font-bold uppercase mb-1 ${isSpecial ? 'opacity-60' : 'opacity-30'}">${picked.id} RANK</span><span class="text-xl font-black">${picked.name}</span></div><div class="text-[9px] px-3 py-1 rounded-full font-bold uppercase ${isSpecial ? 'bg-black text-[#f8ff00]' : 'bg-black text-white'}">Win</div>`;
                 document.getElementById('results-wrapper').prepend(card);
                 render();
@@ -239,8 +231,8 @@
         }
 
         function renderHistory() {
-            const sessionDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
-            const totalDrawn = START_DRAW_COUNT + sessionDrawn;
+            const currentSessionDrawn = sessionLogs.reduce((acc, s) => acc + s.items.length, 0);
+            const totalDrawn = START_DRAW_COUNT + currentSessionDrawn;
             const totalRemaining = state.reduce((acc, s) => acc + s.count, 0);
             
             const list = document.getElementById('history-log-list');
@@ -250,11 +242,10 @@
                     <div class="p-4 border-2 border-black rounded-2xl bg-zinc-50 text-center"><p class="text-[10px] font-bold opacity-50 uppercase">Stock Left</p><p class="text-3xl font-black">${totalRemaining}</p></div>
                 </div>
                 <div class="space-y-3 mb-10">${state.map(item => {
-                    const initial = ORIGINAL_CONFIG.find(p => p.id === item.id).total;
-                    const drawn = initial - item.count;
-                    const percent = ((drawn / initial) * 100).toFixed(1);
+                    const drawn = item.total - item.count;
+                    const percent = ((drawn / item.total) * 100).toFixed(1);
                     const isS = ['A','B','C','D'].includes(item.id);
-                    return `<div class="flex flex-col gap-1"><div class="flex justify-between text-[11px] font-bold"><span>${item.name}</span><span class="opacity-50">${drawn}/${initial}</span></div><div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full ${isS ? 'bg-[#f8ff00]' : 'bg-black'}" style="width: ${percent}%"></div></div></div>`;
+                    return `<div class="flex flex-col gap-1"><div class="flex justify-between text-[11px] font-bold"><span>${item.name}</span><span class="opacity-50">${drawn}/${item.total}</span></div><div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden"><div class="h-full ${isS ? 'bg-[#f8ff00]' : 'bg-black'}" style="width: ${percent}%"></div></div></div>`;
                 }).join('')}</div>
                 ${sessionLogs.slice().reverse().map(s => `<div class="history-item p-4 border border-zinc-100 rounded-xl mb-2"><div class="flex justify-between items-center mb-2"><span class="text-[10px] font-bold opacity-40 uppercase tracking-widest">${s.time}</span><span class="text-[10px] font-black bg-zinc-200 px-2 py-0.5 rounded">${s.items.length}개</span></div><div class="flex flex-wrap">${s.items.map(i => `<span class="history-tag ${['A','B','C','D'].includes(i.grade) ? 'tag-special' : ''}">${i.name}</span>`).join('')}</div></div>`).join('')}
             `;
@@ -265,7 +256,7 @@
             document.getElementById('draw-label').innerText = qty < 1 ? `Enter Qty` : `GLOW♡ (${qty})`;
         }
 
-        function fullReset() { if(confirm("초기화하시겠습니까? 157회 시점 데이터로 복구됩니다.")) { localStorage.clear(); location.reload(); } }
+        function fullReset() { if(confirm("초기화하시겠습니까? 데이터가 157회 시점으로 돌아갑니다.")) { localStorage.clear(); location.reload(); } }
         init();
     </script>
 </body>
